@@ -24,7 +24,13 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
 
 /* ── LOGIN ── */
 #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg)}
+#denied-screen{display:none;align-items:center;justify-content:center;min-height:100vh;background:var(--bg)}
 .login-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);padding:52px 44px;text-align:center;max-width:420px;width:92%;box-shadow:var(--shadow)}
+.denied-card{background:var(--surface);border:1.5px solid var(--coral);border-radius:var(--radius-xl);padding:52px 44px;text-align:center;max-width:420px;width:92%;box-shadow:var(--shadow)}
+.denied-icon{font-size:48px;margin-bottom:16px}
+.denied-title{font-family:'Lora',serif;font-size:24px;color:var(--coral);margin-bottom:10px}
+.denied-msg{font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:24px}
+.denied-email{font-size:13px;font-weight:700;color:var(--text);background:var(--surface2);padding:8px 16px;border-radius:var(--radius);display:inline-block;margin:8px 0 20px}
 .login-logo{font-family:'Lora',serif;font-size:38px;color:var(--teal-dark);letter-spacing:-1px}
 .login-logo em{color:var(--coral);font-style:italic}
 .login-tagline{font-size:13px;color:var(--text2);margin:10px 0 36px;line-height:1.7}
@@ -189,6 +195,11 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
 .config-banner{background:var(--amber-light);border:1.5px solid var(--amber);border-radius:var(--radius-lg);padding:18px 22px;margin-bottom:22px}
 .config-banner h3{font-size:14px;font-weight:700;color:var(--amber);margin-bottom:6px}
 .config-banner p{font-size:13px;color:var(--text2);margin-bottom:12px;line-height:1.6}
+.alert-pront{background:var(--coral-light);border:1.5px solid var(--coral);border-radius:var(--radius-lg);padding:18px 22px;margin-bottom:20px}
+.alert-pront-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.alert-pront-title{font-size:14px;font-weight:700;color:var(--coral);display:flex;align-items:center;gap:8px}
+.alert-pront-item{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--surface);border-radius:var(--radius);margin-bottom:6px;flex-wrap:wrap;gap:6px}
+.alert-pront-item:last-child{margin-bottom:0}
 
 @media(max-width:640px){
   .stats-grid{grid-template-columns:repeat(2,1fr)}
@@ -212,6 +223,20 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
       Entrar com Google
     </button>
     <p class="login-note">Dados salvos no seu Google Drive.<br>Nenhuma informação é enviada a terceiros.</p>
+  </div>
+</div>
+
+<!-- ACESSO NEGADO -->
+<div id="denied-screen">
+  <div class="denied-card">
+    <div class="denied-icon">🔒</div>
+    <div class="denied-title">Acesso não autorizado</div>
+    <div class="denied-msg">
+      O e-mail abaixo não tem permissão para acessar este sistema.<br>
+      Entre em contato com a administradora para solicitar acesso.
+    </div>
+    <div class="denied-email" id="denied-email-display"></div>
+    <button class="btn-google" onclick="signOut()" style="justify-content:center">Tentar com outra conta</button>
   </div>
 </div>
 
@@ -239,6 +264,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
       <div class="page-title">Visão Geral</div>
       <div id="config-banner-wrap"></div>
       <div class="stats-grid" id="stats-grid"></div>
+      <div id="dash-alerta-pront"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
         <div class="card"><div class="section-header"><h3>Próximas sessões</h3><button class="btn btn-ghost btn-sm" onclick="showPage('agenda')">Ver agenda</button></div><div id="dash-proximas"></div></div>
         <div class="card"><div class="section-header"><h3>Pagamentos pendentes</h3><button class="btn btn-ghost btn-sm" onclick="showPage('pagamentos')">Ver todos</button></div><div id="dash-pendentes"></div></div>
@@ -500,14 +526,27 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
 
 <script>
 // ═══ CONFIG ═══
-const SCOPES='https://www.googleapis.com/auth/drive.appdata';
+const SCOPES='https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/userinfo.email';
 const FILE_NAME='psigestao_v2.json';
 let CLIENT_ID=localStorage.getItem('psigestao_cid')||'';
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// LISTA DE E-MAILS AUTORIZADOS
+// Adicione ou remova e-mails conforme necessário.
+// Deixe o array vazio [] para liberar acesso a qualquer conta Google.
+const EMAILS_AUTORIZADOS = [
+  'seuemail@gmail.com',        // ← substitua pelo seu e-mail
+  'supervisora@gmail.com',     // ← adicione outros e-mails autorizados
+  // 'outroemail@gmail.com',   // ← descomente para adicionar mais
+];
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 let tokenClient,driveFileId=null,saveTimer=null;
 let DB={pacientes:[],sessoes:[],prontuarios:[],pagamentos:[]};
 let pacAtual=null,sessAtual=null;
 let mesAtual=new Date().getMonth(),anoAtual=new Date().getFullYear();
 let filtroStatus='todos';
+let emailLogado='';
 
 // ═══ UTILS ═══
 const initials=n=>n.split(' ').slice(0,2).map(x=>x[0]||'').join('').toUpperCase();
@@ -533,7 +572,30 @@ function initGoogle(){
   }
   gapi.load('client',async()=>{
     await gapi.client.init({discoveryDocs:['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest']});
-    tokenClient=google.accounts.oauth2.initTokenClient({client_id:CLIENT_ID,scope:SCOPES,callback:async r=>{if(r.error)return;await loadData();showApp()}});
+    tokenClient=google.accounts.oauth2.initTokenClient({
+      client_id:CLIENT_ID,
+      scope:SCOPES,
+      callback:async r=>{
+        if(r.error)return;
+        // buscar e-mail do usuário logado
+        try{
+          const resp=await fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{'Authorization':'Bearer '+r.access_token}});
+          const info=await resp.json();
+          emailLogado=(info.email||'').toLowerCase();
+          // verificar autorização
+          if(EMAILS_AUTORIZADOS.length>0&&!EMAILS_AUTORIZADOS.map(e=>e.toLowerCase()).includes(emailLogado)){
+            document.getElementById('login-screen').style.display='none';
+            document.getElementById('denied-email-display').textContent=emailLogado;
+            document.getElementById('denied-screen').style.display='flex';
+            return;
+          }
+          // mostrar foto do usuário
+          if(info.picture)document.getElementById('user-pic').src=info.picture;
+          document.getElementById('user-pic').title=emailLogado;
+        }catch(e){console.warn('Não foi possível buscar perfil',e)}
+        await loadData();showApp();
+      }
+    });
     document.getElementById('btn-signin').onclick=()=>tokenClient.requestAccessToken({prompt:'consent'});
   });
 }
@@ -568,6 +630,7 @@ function scheduleSave(){clearTimeout(saveTimer);saveTimer=setTimeout(saveData,14
 
 function showApp(){
   document.getElementById('login-screen').style.display='none';
+  document.getElementById('denied-screen').style.display='none';
   document.getElementById('app').style.display='flex';
   renderDashboard();
 }
@@ -617,6 +680,41 @@ function renderDashboard(){
     <div class="stat-card"><div class="stat-label">Sessões no mês</div><div class="stat-value">${sessMes}</div></div>
     <div class="stat-card"><div class="stat-label">Recebido no mês</div><div class="stat-value" style="font-size:20px">${fmtMoeda(recebido)}</div></div>
     <div class="stat-card"><div class="stat-label">A receber</div><div class="stat-value" style="font-size:20px;color:var(--amber)">${fmtMoeda(aReceber)}</div></div>`;
+
+  // ── Alerta: sessões realizadas sem prontuário ──
+  const semPront=DB.sessoes.filter(s=>
+    (s.status==='realizado'||s.status==='agendado')&&
+    s.data<=hoje_&&
+    !DB.prontuarios.find(pr=>pr.sessaoId===s.id)
+  ).sort((a,b)=>b.data>a.data?1:-1);
+  const alertEl=document.getElementById('dash-alerta-pront');
+  if(semPront.length){
+    alertEl.innerHTML=`<div class="alert-pront">
+      <div class="alert-pront-header">
+        <div class="alert-pront-title">
+          <span style="font-size:18px">⚠</span>
+          ${semPront.length} sessão(ões) sem prontuário preenchido
+        </div>
+        <button class="btn btn-sm" style="background:var(--coral);color:#fff;border:none" onclick="showPage('agenda')">Ver na agenda</button>
+      </div>
+      ${semPront.slice(0,5).map(s=>{
+        const p=DB.pacientes.find(x=>x.id==s.pacienteId);
+        return`<div class="alert-pront-item">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="avatar" style="width:30px;height:30px;font-size:10px;flex-shrink:0">${p?initials(p.nome):'?'}</div>
+            <div>
+              <div style="font-weight:600;font-size:13px">${p?p.nome:'Paciente'}</div>
+              <div style="font-size:12px;color:var(--text2)">${fmtData(s.data)}${s.hora?' às '+s.hora:''}</div>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="abrirFormPront(${s.id},false)">Preencher agora</button>
+        </div>`;
+      }).join('')}
+      ${semPront.length>5?`<div style="font-size:12px;color:var(--coral);text-align:center;margin-top:8px;font-weight:600">+${semPront.length-5} outras sessões pendentes</div>`:''}
+    </div>`;
+  }else{
+    alertEl.innerHTML='';
+  }
   const prox=DB.sessoes.filter(s=>s.data>=hoje_&&s.status==='agendado').sort((a,b)=>a.data>b.data?1:-1).slice(0,5);
   document.getElementById('dash-proximas').innerHTML=prox.length?prox.map(s=>{
     const p=DB.pacientes.find(x=>x.id==s.pacienteId);
@@ -889,18 +987,21 @@ function renderAgenda(){
   }
   document.getElementById('agenda-cal').innerHTML=html;
   const sessMes=DB.sessoes.filter(s=>s.data?.startsWith(`${anoAtual}-${String(mesAtual+1).padStart(2,'0')}`)).sort((a,b)=>a.data>b.data?1:-1);
-  const statusBadge={agendado:'b-scheduled',realizado:'b-done',cancelado:'b-cancelled',falta:'b-missed'};
   const el=document.getElementById('lista-sessoes-mes');
   el.innerHTML=sessMes.length?sessMes.map(s=>{
     const p=DB.pacientes.find(x=>x.id==s.pacienteId);
     const pr=DB.prontuarios.find(x=>x.sessaoId===s.id);
+    const statusOpts=['agendado','realizado','remarcado','falta','cancelado'];
+    const statusColor={agendado:'var(--blue)',realizado:'var(--teal)',remarcado:'var(--amber)',falta:'var(--coral)',cancelado:'var(--text3)'};
     return`<div class="session-list-item">
       <div class="sli-left">
         <div class="avatar" style="width:34px;height:34px;font-size:11px">${p?initials(p.nome):'?'}</div>
         <div><div style="font-weight:600;font-size:13px">${p?p.nome:'Paciente'}</div><div style="font-size:12px;color:var(--text2)">${fmtData(s.data)}${s.hora?' às '+s.hora:''}${s.duracao?' · '+s.duracao+'min':''}</div></div>
       </div>
       <div class="sli-right">
-        <span class="badge ${statusBadge[s.status]||''}">${s.status}</span>
+        <select onchange="alterarStatusSessao(${s.id},this.value)" style="padding:5px 8px;border:1.5px solid ${statusColor[s.status]||'var(--border)'};border-radius:20px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;color:${statusColor[s.status]||'var(--text2)'};background:var(--surface);cursor:pointer;outline:none">
+          ${statusOpts.map(o=>`<option value="${o}"${s.status===o?' selected':''}>${o.charAt(0).toUpperCase()+o.slice(1)}</option>`).join('')}
+        </select>
         ${s.status==='realizado'||s.status==='agendado'?
           pr?`<button class="btn btn-ghost btn-sm" onclick="abrirSessaoDetalhe(${s.id})">Ver prontuário</button>`
             :`<button class="btn btn-primary btn-sm" onclick="abrirSessaoDetalhe(${s.id})">Preencher prontuário</button>`
@@ -912,6 +1013,16 @@ function renderAgenda(){
 
 function mudarMes(d){mesAtual+=d;if(mesAtual>11){mesAtual=0;anoAtual++}if(mesAtual<0){mesAtual=11;anoAtual--}renderAgenda()}
 
+function alterarStatusSessao(id,novoStatus){
+  const i=DB.sessoes.findIndex(s=>s.id===id);
+  if(i<0)return;
+  DB.sessoes[i].status=novoStatus;
+  scheduleSave();
+  renderAgenda();
+  renderDashboard();
+  toast(`Status alterado para "${novoStatus}"`);
+}
+
 function openModalSessao(data,pacienteId){
   const pacs=DB.pacientes.filter(p=>p.status==='ativo');
   document.getElementById('ms-pac').innerHTML='<option value="">Selecionar...</option>'+pacs.map(p=>`<option value="${p.id}"${pacienteId===p.id?' selected':''}>${p.nome}</option>`).join('');
@@ -922,12 +1033,40 @@ function openModalSessao(data,pacienteId){
 function salvarSessao(){
   const pac=document.getElementById('ms-pac').value;
   const data=document.getElementById('ms-data').value;
+  const hora=document.getElementById('ms-hora').value;
+  const dur=Number(document.getElementById('ms-dur').value)||50;
+  const status=document.getElementById('ms-status').value;
   if(!pac||!data)return alert('Selecione o paciente e a data.');
+
+  // ── Verificação de conflito de horário ──
+  if(hora){
+    const [hN,mN]=hora.split(':').map(Number);
+    const inicioNova=hN*60+mN;
+    const fimNova=inicioNova+dur;
+    const conflito=DB.sessoes.find(s=>{
+      if(s.data!==data)return false;
+      if(s.status==='cancelado')return false;
+      if(!s.hora)return false;
+      const [hE,mE]=s.hora.split(':').map(Number);
+      const inicioExist=hE*60+mE;
+      const fimExist=inicioExist+(Number(s.duracao)||50);
+      return inicioNova<fimExist&&fimNova>inicioExist;
+    });
+    if(conflito){
+      const pac2=DB.pacientes.find(p=>p.id==conflito.pacienteId);
+      const msg=`Conflito de horário!\n\n`+
+        `Já existe uma sessão agendada para ${fmtData(data)} às ${conflito.hora}`+
+        (pac2?` com ${pac2.nome}`:'')+`.\n\n`+
+        `Verifique o horário e tente novamente.`;
+      alert(msg);
+      return;
+    }
+  }
+
   const id=nextId(DB.sessoes);
-  DB.sessoes.push({id,pacienteId:Number(pac),data,hora:document.getElementById('ms-hora').value,duracao:document.getElementById('ms-dur').value,status:document.getElementById('ms-status').value,obs:document.getElementById('ms-obs').value});
+  DB.sessoes.push({id,pacienteId:Number(pac),data,hora,duracao:dur,status,obs:document.getElementById('ms-obs').value});
   closeModal('ov-sessao');renderAgenda();scheduleSave();toast('Sessão agendada!');
-  // se realizado, abrir prontuário direto
-  if(document.getElementById('ms-status').value==='realizado'){setTimeout(()=>abrirFormPront(id,false),300)}
+  if(status==='realizado'){setTimeout(()=>abrirFormPront(id,false),300)}
 }
 
 // abre o prontuário do paciente na aba sessões, destacando a sessão
