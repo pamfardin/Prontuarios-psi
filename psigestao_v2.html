@@ -2180,41 +2180,41 @@ function exportarPDFFicha(){
   renderConfiguracoesPacSelect();
   const pacId=document.getElementById('pdf-pac-select').value;
   const cfg=DB.configuracoes||{};
-  const pacs=pacId?DB.pacientes.filter(p=>p.id==pacId):DB.pacientes;
+  // CORREÇÃO: comparação de tipo correta
+  const pacs=pacId?DB.pacientes.filter(p=>String(p.id)===String(pacId)):DB.pacientes;
   const dias=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
   const humorLabel={'muito-negativo':'😞 Muito negativo','negativo':'😕 Negativo','neutro':'😐 Neutro','positivo':'🙂 Positivo','muito-positivo':'😊 Muito positivo'};
-  let html=`<div style="font-family:Georgia,serif">
-    <div style="text-align:center;border-bottom:2px solid #1a9070;padding-bottom:16px;margin-bottom:24px">
-      <div style="font-size:22px;font-weight:bold;color:#0d5c47">PsiGestão</div>
-      ${cfg.nome?`<div style="font-size:14px;color:#444;margin-top:4px">${cfg.nome}${cfg.crp?' · CRP '+cfg.crp:''}${cfg.especialidade?' · '+cfg.especialidade:''}</div>`:''}
+  let html=`<div style="font-family:'Nunito',Georgia,sans-serif">
+    <div style="text-align:center;border-bottom:2px solid #2a6b72;padding-bottom:16px;margin-bottom:24px">
+      <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#2a6b72;font-weight:600">${cfg.nome||''}${cfg.crp?' · CRP '+cfg.crp:''}</div>
       <div style="font-size:11px;color:#888;margin-top:4px">Emitido em ${fmtData(hoje())}</div>
     </div>`;
-  pacs.forEach(p=>{
+  pacs.forEach((p,idx)=>{
     const sessPac=DB.sessoes.filter(s=>s.pacienteId===p.id).sort((a,b)=>a.data>b.data?1:-1);
     const nReal=sessPac.filter(s=>s.status==='realizado').length;
     const totalPago=DB.pagamentos.filter(pg=>pg.pacienteId===p.id&&pg.status==='pago').reduce((a,b)=>a+Number(b.valor||0),0);
     html+=`
-    <div style="page-break-before:${pacs.indexOf(p)>0?'always':'auto'};margin-bottom:32px">
-      <div style="background:#e4f5ef;border-left:4px solid #1a9070;padding:14px 18px;border-radius:0 8px 8px 0;margin-bottom:18px">
-        <div style="font-size:18px;font-weight:bold;color:#0d5c47">${p.nome}</div>
-        <div style="font-size:12px;color:#555;margin-top:4px">${p.status} · ${p.frequencia||''} · ${nReal} sessões realizadas</div>
+    <div style="${idx>0?'page-break-before:always;':''}margin-bottom:32px">
+      <div style="background:#e0eff0;border-left:4px solid #2a6b72;padding:14px 18px;border-radius:0 8px 8px 0;margin-bottom:18px">
+        <div style="font-size:18px;font-weight:bold;color:#1a4548">${p.nome}</div>
+        <div style="font-size:12px;color:#4a6868;margin-top:4px">${p.status} · ${p.frequencia||''} · ${nReal} sessões realizadas</div>
       </div>
       <table style="width:100%;font-size:12px;border-collapse:collapse;margin-bottom:16px">
         <tr><td style="padding:5px 8px;color:#888;width:30%">Nascimento</td><td style="padding:5px 8px;font-weight:bold">${p.nascimento?fmtData(p.nascimento):'—'}</td>
             <td style="padding:5px 8px;color:#888;width:20%">Telefone</td><td style="padding:5px 8px;font-weight:bold">${p.telefone||'—'}</td></tr>
-        <tr style="background:#f9f9f9"><td style="padding:5px 8px;color:#888">Email</td><td style="padding:5px 8px;font-weight:bold">${p.email||'—'}</td>
+        <tr style="background:#f5f8f8"><td style="padding:5px 8px;color:#888">Email</td><td style="padding:5px 8px;font-weight:bold">${p.email||'—'}</td>
             <td style="padding:5px 8px;color:#888">Valor/sessão</td><td style="padding:5px 8px;font-weight:bold">${p.valorSessao?fmtMoeda(p.valorSessao):'—'}</td></tr>
-        <tr><td style="padding:5px 8px;color:#888">Total recebido</td><td style="padding:5px 8px;font-weight:bold;color:#1a9070">${fmtMoeda(totalPago)}</td>
+        <tr><td style="padding:5px 8px;color:#888">Total recebido</td><td style="padding:5px 8px;font-weight:bold;color:#2a6b72">${fmtMoeda(totalPago)}</td>
             <td style="padding:5px 8px;color:#888">Dia/horário</td><td style="padding:5px 8px;font-weight:bold">${p.diaSemana!==''&&p.diaSemana!==undefined?dias[p.diaSemana]:''} ${p.horario||'—'}</td></tr>
       </table>
-      ${p.queixa?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:bold;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Queixa principal</div><div style="font-size:13px;line-height:1.7;background:#f9f9f9;padding:12px;border-radius:6px;white-space:pre-wrap">${p.queixa}</div></div>`:''}
-      ${p.objetivos?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:bold;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Objetivos terapêuticos</div><div style="font-size:13px;line-height:1.7;background:#f9f9f9;padding:12px;border-radius:6px;white-space:pre-wrap">${p.objetivos}</div></div>`:''}
+      ${p.queixa?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:bold;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Queixa principal</div><div style="font-size:13px;line-height:1.7;background:#f5f8f8;padding:12px;border-radius:6px;white-space:pre-wrap">${p.queixa}</div></div>`:''}
+      ${p.objetivos?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:bold;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Objetivos terapêuticos</div><div style="font-size:13px;line-height:1.7;background:#f5f8f8;padding:12px;border-radius:6px;white-space:pre-wrap">${p.objetivos}</div></div>`:''}
       <div style="font-size:11px;font-weight:bold;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;margin-top:18px">Histórico de sessões e prontuários</div>
       ${sessPac.length?sessPac.map(s=>{
         const pr=DB.prontuarios.find(x=>x.sessaoId===s.id);
-        const statusCor={realizado:'#1a9070',agendado:'#1a5fa0',falta:'#c94f2a',cancelado:'#888',remarcado:'#b07010'};
-        return`<div style="border:1px solid #ddd;border-radius:8px;margin-bottom:10px;overflow:hidden">
-          <div style="background:#f5f5f5;padding:10px 14px;display:flex;justify-content:space-between;align-items:center">
+        const statusCor={realizado:'#2a6b72',agendado:'#2e6aaf',falta:'#c94f2a',cancelado:'#888',remarcado:'#b07010'};
+        return`<div style="border:1px solid #c8d8d8;border-radius:8px;margin-bottom:10px;overflow:hidden">
+          <div style="background:#eaf0f0;padding:10px 14px;display:flex;justify-content:space-between;align-items:center">
             <div style="font-weight:bold;font-size:13px">${fmtData(s.data)}${s.hora?' às '+s.hora:''}${s.duracao?' · '+s.duracao+' min':''}${s.modalidade?' · '+s.modalidade:''}</div>
             <span style="font-size:11px;font-weight:bold;color:${statusCor[s.status]||'#888'}">${s.status.toUpperCase()}</span>
           </div>
@@ -2326,27 +2326,26 @@ function imprimirPDF(){
   body{font-family:'Nunito',Georgia,serif;margin:0;padding:0;color:#1a2e2e;background:#fff;position:relative}
 
   /* ── MARCA D'ÁGUA ── */
-  body::before{
-    content:'';
+  .marca-dagua{
     position:fixed;
     top:50%;left:50%;
     transform:translate(-50%,-50%) rotate(-20deg);
-    width:320px;height:320px;
-    background:url('${galhoB64}') center/contain no-repeat;
-    opacity:.06;
+    width:300px;height:300px;
+    opacity:.055;
     pointer-events:none;
     z-index:0;
   }
-  body::after{
-    content:'${nomePdf.toUpperCase()}  ·  ${crpPdf}';
+  .marca-dagua img{width:100%;height:100%;object-fit:contain}
+  .rodape-marca{
     position:fixed;
-    bottom:28px;left:0;right:0;
+    bottom:20px;left:0;right:0;
     text-align:center;
     font-family:'Cormorant Garamond',serif;
     font-size:10px;
     letter-spacing:3px;
+    text-transform:uppercase;
     color:#2a6b72;
-    opacity:.35;
+    opacity:.4;
     pointer-events:none;
     z-index:0;
   }
@@ -2355,14 +2354,16 @@ function imprimirPDF(){
   .pdf-wrap{position:relative;z-index:1;padding:36px 44px}
 
   @media print{
-    body::before{position:fixed}
-    body::after{position:fixed}
+    .marca-dagua{position:fixed}
+    .rodape-marca{position:fixed}
     .pdf-wrap{padding:24px 32px}
     @page{margin:12mm 14mm}
   }
 </style>
 </head>
 <body>
+<div class="marca-dagua"><img src="${galhoB64}" alt=""></div>
+<div class="rodape-marca">${nomePdf} · ${crpPdf}</div>
 <div class="pdf-wrap">${pdfConteudoAtual}</div>
 </body></html>`);
   w.document.close();
