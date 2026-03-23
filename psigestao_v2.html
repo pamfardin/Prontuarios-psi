@@ -1224,6 +1224,12 @@ function salvarEncontro(){
 }
 function excluirEncontro(id){
   if(!confirm('Excluir este encontro?'))return;
+  const encontro=(DB.encontros||[]).find(e=>e.id===id);
+  if(encontro?.calendarId&&calAtivo()){
+    if(confirm('Este encontro tem um evento no Google Calendar. Deseja excluir lá também?')){
+      excluirEventoCalendar(encontro.calendarId);
+    }
+  }
   DB.encontros=(DB.encontros||[]).filter(e=>e.id!==id);
   renderAbaSvEncontros();scheduleSave();
 }
@@ -1561,6 +1567,12 @@ function salvarPaciente(){
 }
 function excluirPaciente(id){
   if(!confirm('Excluir este paciente e todos seus registros?'))return;
+  if(calAtivo()){
+    const sessoesComCal=DB.sessoes.filter(s=>s.pacienteId===id&&s.calendarId);
+    if(sessoesComCal.length&&confirm(`Este paciente tem ${sessoesComCal.length} evento(s) no Google Calendar. Deseja excluir lá também?`)){
+      sessoesComCal.forEach(s=>excluirEventoCalendar(s.calendarId));
+    }
+  }
   DB.pacientes=DB.pacientes.filter(p=>p.id!==id);
   DB.sessoes=DB.sessoes.filter(s=>s.pacienteId!==id);
   DB.prontuarios=DB.prontuarios.filter(pr=>pr.pacienteId!==id);
@@ -1727,6 +1739,12 @@ function salvarProntSessao(){
 
 function excluirSessaoPront(id){
   if(!confirm('Excluir esta sessão e seu prontuário?'))return;
+  const sessao=DB.sessoes.find(s=>s.id===id);
+  if(sessao?.calendarId&&calAtivo()){
+    if(confirm('Esta sessão tem um evento no Google Calendar. Deseja excluir lá também?')){
+      excluirEventoCalendar(sessao.calendarId);
+    }
+  }
   DB.sessoes=DB.sessoes.filter(s=>s.id!==id);
   DB.prontuarios=DB.prontuarios.filter(pr=>pr.sessaoId!==id);
   renderAbaSessoes();renderAgenda();scheduleSave();
