@@ -339,11 +339,42 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
       </button>
     </div>
     <div id="login-manual">
+      <div id="login-erro" style="display:none;background:#fff3f3;border:1.5px solid var(--coral);border-radius:var(--radius);padding:12px;margin-bottom:14px;font-size:12px;color:var(--coral);text-align:left"></div>
       <button class="btn-google" id="btn-signin">
         <svg width="20" height="20" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
         Entrar com Google
       </button>
       <p class="login-note">Dados salvos no seu Google Drive.<br>Nenhuma informação é enviada a terceiros.</p>
+      <div style="margin-top:18px;border-top:1px solid var(--border);padding-top:14px">
+        <details style="font-size:12px;color:var(--text2)">
+          <summary style="cursor:pointer;font-weight:600;color:var(--text);margin-bottom:8px">🔧 Não está conseguindo entrar? Clique aqui</summary>
+          <div id="diag-wrap" style="margin-top:10px;line-height:1.7">
+            <div id="diag-cid" style="margin-bottom:8px"></div>
+            <div id="diag-origem" style="margin-bottom:8px"></div>
+            <div style="margin-top:12px;font-weight:600;color:var(--text)">Passos para corrigir:</div>
+            <ol style="margin:6px 0 0 18px;padding:0">
+              <li>Acesse <a href="https://console.cloud.google.com" target="_blank" style="color:var(--brand-dark)">console.cloud.google.com</a></li>
+              <li>Vá em <strong>APIs e Serviços → Credenciais</strong></li>
+              <li>Clique no seu Client ID OAuth</li>
+              <li>Em <strong>"Origens JavaScript autorizadas"</strong>, adicione exatamente:<br>
+                <code id="diag-url" style="background:var(--surface2);padding:2px 6px;border-radius:4px;font-size:11px;word-break:break-all"></code>
+              </li>
+              <li>Clique <strong>Salvar</strong> e aguarde 5 minutos</li>
+              <li>Recarregue esta página e tente novamente</li>
+            </ol>
+            <div style="margin-top:10px;padding:8px;background:var(--amber-light);border-radius:6px;font-size:11px">
+              ⚠️ Também verifique se seu e-mail está na lista de <strong>"Usuários de teste"</strong> no Google Cloud Console → APIs e Serviços → Tela de consentimento OAuth
+            </div>
+            <div style="margin-top:10px">
+              <strong>Client ID configurado:</strong>
+              <div style="display:flex;gap:6px;margin-top:6px">
+                <input id="cid-diag-input" placeholder="Cole seu Client ID aqui..." style="flex:1;padding:7px 10px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:12px;font-family:'Nunito',sans-serif;outline:none">
+                <button class="btn btn-primary btn-sm" onclick="salvarCidDiag()">Salvar</button>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
     </div>
   </div>
 </div>
@@ -1396,8 +1427,35 @@ const mesesNome=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','
 function toast(msg,dur=2800){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur)}
 function setSync(s){const d=document.getElementById('sync-dot'),l=document.getElementById('sync-label');d.className='sync-dot';if(s==='syncing'){d.classList.add('syncing');l.textContent='salvando...'}else if(s==='ok'){l.textContent='sincronizado'}else{d.classList.add('error');l.textContent='erro ao salvar'}}
 
+function salvarCidDiag(){
+  const v=document.getElementById('cid-diag-input').value.trim();
+  if(!v)return alert('Cole o Client ID primeiro.');
+  localStorage.setItem('psigestao_cid',v);
+  location.reload();
+}
+
+function mostrarDiagnostico(erro){
+  const el=document.getElementById('login-erro');
+  if(el&&erro){el.style.display='block';el.textContent='Erro Google: '+erro;}
+  // preencher diagnóstico
+  const origemAtual=location.origin;
+  const cidAtual=localStorage.getItem('psigestao_cid')||'';
+  const elCid=document.getElementById('diag-cid');
+  const elOri=document.getElementById('diag-origem');
+  const elUrl=document.getElementById('diag-url');
+  const elInput=document.getElementById('cid-diag-input');
+  if(elCid) elCid.innerHTML=cidAtual
+    ?`✅ <strong>Client ID:</strong> ${cidAtual.slice(0,30)}...`
+    :`❌ <strong>Client ID não configurado</strong> — preencha o campo abaixo`;
+  if(elOri) elOri.innerHTML=`🌐 <strong>Origem desta página:</strong> <code style="background:var(--surface2);padding:2px 6px;border-radius:4px">${origemAtual}</code>`;
+  if(elUrl) elUrl.textContent=origemAtual;
+  if(elInput&&cidAtual) elInput.value=cidAtual;
+}
+
 // ═══ GOOGLE DRIVE ═══
 function initGoogle(){
+  // preencher diagnóstico sempre que a tela de login estiver visível
+  setTimeout(mostrarDiagnostico, 200);
   if(!CLIENT_ID){
     document.getElementById('btn-signin').onclick=()=>{
       document.getElementById('login-screen').style.display='none';
@@ -1417,6 +1475,7 @@ function initGoogle(){
         if(r.error==='interaction_required'||r.error==='access_denied'||r.error==='invalid_grant'){
           localStorage.removeItem('psigestao_hint');
         }
+        mostrarDiagnostico(r.error);
         return;
       }
       // guardar e-mail para renovações futuras
