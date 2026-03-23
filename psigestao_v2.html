@@ -349,16 +349,28 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
     <div class="page" id="page-pagamentos">
       <div class="section-header">
         <div class="page-title" style="margin-bottom:0">Pagamentos</div>
-        <button class="btn btn-primary" onclick="openModalPagamento()">+ Registrar</button>
-      </div>
-      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)" id="stats-pag"></div>
-      <div class="card">
-        <div class="section-header"><h3>Histórico</h3>
-          <select onchange="filtroStatus=this.value;renderPagamentos()" style="padding:7px 11px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:'Nunito',sans-serif;background:var(--surface)">
-            <option value="todos">Todos</option><option value="pendente">Pendentes</option><option value="pago">Pagos</option><option value="atrasado">Atrasados</option>
-          </select>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" id="btn-pag-financeiro" onclick="showTabPag('financeiro')">💰 Financeiro</button>
+          <button class="btn btn-primary" id="btn-pag-novo" onclick="openModalPagamento()">+ Registrar</button>
         </div>
-        <div id="lista-pagamentos"></div>
+      </div>
+
+      <!-- TAB: RECEBIMENTOS (padrão) -->
+      <div id="tab-pag-recebimentos">
+        <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)" id="stats-pag"></div>
+        <div class="card">
+          <div class="section-header"><h3>Histórico de recebimentos</h3>
+            <select onchange="filtroStatus=this.value;renderPagamentos()" style="padding:7px 11px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:'Nunito',sans-serif;background:var(--surface)">
+              <option value="todos">Todos</option><option value="pendente">Pendentes</option><option value="pago">Pagos</option><option value="atrasado">Atrasados</option>
+            </select>
+          </div>
+          <div id="lista-pagamentos"></div>
+        </div>
+      </div>
+
+      <!-- TAB: FINANCEIRO -->
+      <div id="tab-pag-financeiro" style="display:none">
+        <div id="financeiro-wrap"></div>
       </div>
     </div>
 
@@ -694,6 +706,90 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('ov-pag-sup')">Cancelar</button>
       <button class="btn btn-primary" onclick="salvarPagSup()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DESPESA -->
+<div class="overlay" id="ov-despesa">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-header">
+      <div><div class="modal-title" id="desp-titulo">Nova despesa</div></div>
+      <button class="modal-close" onclick="closeModal('ov-despesa')">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="fg form-full"><label>Descrição *</label><input id="desp-desc" placeholder="Ex: Aluguel sala, Internet, Material..."></div>
+      <div class="fg form-full"><label>Categoria *</label>
+        <select id="desp-cat">
+          <option value="">Selecionar...</option>
+          <option value="aluguel">Aluguel</option>
+          <option value="condominio">Condomínio</option>
+          <option value="energia">Energia elétrica</option>
+          <option value="internet">Internet / Telefone</option>
+          <option value="limpeza">Limpeza / Manutenção</option>
+          <option value="curso">Cursos / Supervisão / Formação</option>
+          <option value="material">Materiais</option>
+          <option value="outros">Outros</option>
+        </select>
+      </div>
+      <div class="fg"><label>Valor (R$) *</label><input id="desp-valor" type="number" step="0.01" placeholder="0,00"></div>
+      <div class="fg"><label>Data *</label><input id="desp-data" type="date"></div>
+      <div class="fg form-full"><label>Recorrência</label>
+        <select id="desp-recorrencia">
+          <option value="unica">Única (avulsa)</option>
+          <option value="mensal">Fixa mensal</option>
+        </select>
+      </div>
+      <div class="fg form-full"><label>Observação</label><input id="desp-obs" placeholder="Opcional"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('ov-despesa')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarDespesa()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SUBLOCAÇÃO -->
+<div class="overlay" id="ov-subloc">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-header">
+      <div><div class="modal-title" id="subloc-titulo">Nova sublocação</div></div>
+      <button class="modal-close" onclick="closeModal('ov-subloc')">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="fg form-full"><label>Nome do profissional *</label><input id="subloc-nome" placeholder="Nome do sublocatário"></div>
+      <div class="fg"><label>Profissão / Especialidade</label><input id="subloc-prof" placeholder="Ex: Psicóloga, Nutricionista..."></div>
+      <div class="fg"><label>Telefone / WhatsApp</label><input id="subloc-tel" placeholder="(00) 00000-0000"></div>
+      <div class="fg"><label>Valor mensal fixo (R$) *</label><input id="subloc-valor" type="number" step="0.01" placeholder="0,00"></div>
+      <div class="fg"><label>Dia de vencimento</label><input id="subloc-dia" type="number" min="1" max="31" placeholder="Ex: 5"></div>
+      <div class="fg"><label>Status</label>
+        <select id="subloc-status"><option value="ativo">Ativo</option><option value="inativo">Inativo</option></select>
+      </div>
+      <div class="fg form-full"><label>Observação</label><input id="subloc-obs" placeholder="Opcional"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('ov-subloc')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarSubloc()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RECEBIMENTO SUBLOCAÇÃO -->
+<div class="overlay" id="ov-subloc-pgto">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <div><div class="modal-title">Registrar recebimento</div><div class="modal-subtitle" id="subloc-pgto-subtitle"></div></div>
+      <button class="modal-close" onclick="closeModal('ov-subloc-pgto')">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="fg"><label>Valor recebido (R$)</label><input id="subloc-pgto-valor" type="number" step="0.01"></div>
+      <div class="fg"><label>Data do recebimento</label><input id="subloc-pgto-data" type="date"></div>
+      <div class="fg form-full"><label>Referência (mês/ano)</label><input id="subloc-pgto-ref" placeholder="Ex: Janeiro/2026"></div>
+      <div class="fg form-full"><label>Observação</label><input id="subloc-pgto-obs" placeholder="Opcional"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('ov-subloc-pgto')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarRecebSubLoc()">Confirmar</button>
     </div>
   </div>
 </div>
@@ -1118,7 +1214,7 @@ const EMAILS_AUTORIZADOS = [
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 let tokenClient,driveFileId=null,saveTimer=null;
-let DB={pacientes:[],sessoes:[],prontuarios:[],pagamentos:[],configuracoes:{},perfil:{},supervisionandas:[],encontros:[],pagamentosSup:[],listaEspera:[],anamneses:[]};
+let DB={pacientes:[],sessoes:[],prontuarios:[],pagamentos:[],configuracoes:{},perfil:{},supervisionandas:[],encontros:[],pagamentosSup:[],listaEspera:[],anamneses:[],despesas:[],sublocacoes:[],recebSubLoc:[]};
 let pacAtual=null,sessAtual=null;
 let mesAtual=new Date().getMonth(),anoAtual=new Date().getFullYear();
 let filtroStatus='todos';
@@ -1218,6 +1314,9 @@ async function loadData(){
       DB.pagamentosSup=DB.pagamentosSup||[];
       DB.listaEspera=DB.listaEspera||[];
       DB.anamneses=DB.anamneses||[];
+      DB.despesas=DB.despesas||[];
+      DB.sublocacoes=DB.sublocacoes||[];
+      DB.recebSubLoc=DB.recebSubLoc||[];
     }
   }catch(e){console.warn(e)}
 }
@@ -1714,6 +1813,313 @@ function renderDashboard(){
       <div><div style="font-weight:600;font-size:13px">${p?p.nome:'Paciente'}</div><div style="font-size:12px;color:var(--text2)">${pg.descricao||''}${pg.vencimento?' · '+fmtData(pg.vencimento):''}</div></div>
       <div class="pay-right"><span class="badge ${pg.status==='atrasado'?'b-late':'b-pending'}">${pg.status}</span><span style="font-weight:600">${fmtMoeda(pg.valor)}</span></div>
     </div>`}).join(''):'<div class="empty"><p>Nenhum pagamento pendente</p></div>';
+}
+
+// ═══ FINANCEIRO — DESPESAS E SUBLOCAÇÕES ═══
+
+const CAT_LABELS={aluguel:'Aluguel',condominio:'Condomínio',energia:'Energia elétrica',internet:'Internet / Telefone',limpeza:'Limpeza / Manutenção',curso:'Cursos / Formação',material:'Materiais',outros:'Outros'};
+const CAT_CORES={aluguel:'#c94f2a',condominio:'#b07010',energia:'#e8a000',internet:'#2e6aaf',limpeza:'#6040a0',curso:'#2a6b72',material:'#5a8a6a',outros:'#888'};
+
+function showTabPag(tab){
+  const isFinanceiro = tab === 'financeiro';
+  document.getElementById('tab-pag-recebimentos').style.display = isFinanceiro ? 'none' : 'block';
+  document.getElementById('tab-pag-financeiro').style.display  = isFinanceiro ? 'block' : 'none';
+  document.getElementById('btn-pag-novo').style.display        = isFinanceiro ? 'none' : '';
+  document.getElementById('btn-pag-financeiro').textContent    = isFinanceiro ? '← Recebimentos' : '💰 Financeiro';
+  document.getElementById('btn-pag-financeiro').onclick        = isFinanceiro ? ()=>showTabPag('recebimentos') : ()=>showTabPag('financeiro');
+  if(isFinanceiro) renderFinanceiro();
+}
+
+// ── Despesas ──
+let editandoDespId = null;
+function openModalDespesa(id){
+  editandoDespId = id||null;
+  document.getElementById('desp-titulo').textContent = id ? 'Editar despesa' : 'Nova despesa';
+  if(id){
+    const d=(DB.despesas||[]).find(x=>x.id===id);
+    if(d){
+      document.getElementById('desp-desc').value=d.desc||'';
+      document.getElementById('desp-cat').value=d.categoria||'';
+      document.getElementById('desp-valor').value=d.valor||'';
+      document.getElementById('desp-data').value=d.data||'';
+      document.getElementById('desp-recorrencia').value=d.recorrencia||'unica';
+      document.getElementById('desp-obs').value=d.obs||'';
+    }
+  }else{
+    ['desp-desc','desp-obs'].forEach(i=>document.getElementById(i).value='');
+    document.getElementById('desp-cat').value='';
+    document.getElementById('desp-valor').value='';
+    document.getElementById('desp-data').value=hoje();
+    document.getElementById('desp-recorrencia').value='unica';
+  }
+  openModal('ov-despesa');
+}
+function salvarDespesa(){
+  const desc=document.getElementById('desp-desc').value.trim();
+  const cat=document.getElementById('desp-cat').value;
+  const valor=parseFloat(document.getElementById('desp-valor').value)||0;
+  const data=document.getElementById('desp-data').value;
+  if(!desc||!cat||!valor||!data) return alert('Preencha descrição, categoria, valor e data.');
+  if(!DB.despesas) DB.despesas=[];
+  const obj={desc,categoria:cat,valor,data,recorrencia:document.getElementById('desp-recorrencia').value,obs:document.getElementById('desp-obs').value};
+  if(editandoDespId){
+    const i=DB.despesas.findIndex(x=>x.id===editandoDespId);
+    if(i>=0) DB.despesas[i]={...DB.despesas[i],...obj};
+  }else{
+    obj.id=nextId(DB.despesas);
+    DB.despesas.push(obj);
+  }
+  closeModal('ov-despesa');renderFinanceiro();scheduleSave();toast('Despesa salva!');
+}
+function excluirDespesa(id){
+  if(!confirm('Excluir esta despesa?')) return;
+  DB.despesas=(DB.despesas||[]).filter(x=>x.id!==id);
+  renderFinanceiro();scheduleSave();
+}
+
+// ── Sublocações ──
+let editandoSublocId = null;
+function openModalSubloc(id){
+  editandoSublocId = id||null;
+  document.getElementById('subloc-titulo').textContent = id ? 'Editar sublocatário' : 'Nova sublocação';
+  if(id){
+    const s=(DB.sublocacoes||[]).find(x=>x.id===id);
+    if(s){
+      document.getElementById('subloc-nome').value=s.nome||'';
+      document.getElementById('subloc-prof').value=s.profissao||'';
+      document.getElementById('subloc-tel').value=s.tel||'';
+      document.getElementById('subloc-valor').value=s.valor||'';
+      document.getElementById('subloc-dia').value=s.diaVenc||'';
+      document.getElementById('subloc-status').value=s.status||'ativo';
+      document.getElementById('subloc-obs').value=s.obs||'';
+    }
+  }else{
+    ['subloc-nome','subloc-prof','subloc-tel','subloc-obs'].forEach(i=>document.getElementById(i).value='');
+    document.getElementById('subloc-valor').value='';
+    document.getElementById('subloc-dia').value='';
+    document.getElementById('subloc-status').value='ativo';
+  }
+  openModal('ov-subloc');
+}
+function salvarSubloc(){
+  const nome=document.getElementById('subloc-nome').value.trim();
+  const valor=parseFloat(document.getElementById('subloc-valor').value)||0;
+  if(!nome||!valor) return alert('Informe nome e valor.');
+  if(!DB.sublocacoes) DB.sublocacoes=[];
+  const obj={nome,profissao:document.getElementById('subloc-prof').value,tel:document.getElementById('subloc-tel').value,valor,diaVenc:document.getElementById('subloc-dia').value,status:document.getElementById('subloc-status').value,obs:document.getElementById('subloc-obs').value};
+  if(editandoSublocId){
+    const i=DB.sublocacoes.findIndex(x=>x.id===editandoSublocId);
+    if(i>=0) DB.sublocacoes[i]={...DB.sublocacoes[i],...obj};
+  }else{
+    obj.id=nextId(DB.sublocacoes);
+    DB.sublocacoes.push(obj);
+  }
+  closeModal('ov-subloc');renderFinanceiro();scheduleSave();toast('Sublocação salva!');
+}
+
+// ── Recebimentos de sublocação ──
+let _sublocPgtoId=null;
+function openModalRecebSubLoc(sublocId){
+  const s=(DB.sublocacoes||[]).find(x=>x.id===sublocId);
+  if(!s) return;
+  _sublocPgtoId=sublocId;
+  document.getElementById('subloc-pgto-subtitle').textContent=s.nome;
+  document.getElementById('subloc-pgto-valor').value=s.valor||'';
+  document.getElementById('subloc-pgto-data').value=hoje();
+  const now=new Date();
+  document.getElementById('subloc-pgto-ref').value=now.toLocaleString('pt-BR',{month:'long',year:'numeric'});
+  document.getElementById('subloc-pgto-obs').value='';
+  openModal('ov-subloc-pgto');
+}
+function salvarRecebSubLoc(){
+  const valor=parseFloat(document.getElementById('subloc-pgto-valor').value)||0;
+  const data=document.getElementById('subloc-pgto-data').value;
+  if(!valor||!data) return alert('Informe valor e data.');
+  if(!DB.recebSubLoc) DB.recebSubLoc=[];
+  DB.recebSubLoc.push({id:nextId(DB.recebSubLoc),sublocId:_sublocPgtoId,valor,data,ref:document.getElementById('subloc-pgto-ref').value,obs:document.getElementById('subloc-pgto-obs').value});
+  closeModal('ov-subloc-pgto');renderFinanceiro();scheduleSave();toast('Recebimento registrado!');
+}
+function excluirRecebSubLoc(id){
+  if(!confirm('Excluir este recebimento?')) return;
+  DB.recebSubLoc=(DB.recebSubLoc||[]).filter(x=>x.id!==id);
+  renderFinanceiro();scheduleSave();
+}
+
+// ── Renderização principal do Financeiro ──
+function renderFinanceiro(){
+  if(!DB.despesas) DB.despesas=[];
+  if(!DB.sublocacoes) DB.sublocacoes=[];
+  if(!DB.recebSubLoc) DB.recebSubLoc=[];
+
+  const now=new Date();
+  const mesAtual=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+
+  // filtrar pelo mês selecionado
+  const mesFinEl=document.getElementById('fin-mes-sel');
+  const mesSel=mesFinEl?mesFinEl.value:mesAtual;
+
+  // Receitas de pacientes no mês
+  const recPac=DB.pagamentos.filter(p=>p.status==='pago'&&(p.dataPgto||'').startsWith(mesSel));
+  const totalRecPac=recPac.reduce((a,b)=>a+Number(b.valor||0),0);
+
+  // Receitas de sublocação no mês
+  const recSub=DB.recebSubLoc.filter(r=>(r.data||'').startsWith(mesSel));
+  const totalRecSub=recSub.reduce((a,b)=>a+Number(b.valor||0),0);
+
+  // Despesas no mês (únicas naquele mês + fixas mensais de qualquer data)
+  const despMes=DB.despesas.filter(d=>{
+    if(d.recorrencia==='mensal') return true; // fixas sempre contam
+    return (d.data||'').startsWith(mesSel);
+  });
+  const totalDesp=despMes.reduce((a,b)=>a+Number(b.valor||0),0);
+
+  const totalReceita=totalRecPac+totalRecSub;
+  const lucro=totalReceita-totalDesp;
+
+  // Montar meses disponíveis para o seletor
+  const todosMeses=new Set();
+  DB.pagamentos.filter(p=>p.dataPgto).forEach(p=>todosMeses.add(p.dataPgto.slice(0,7)));
+  DB.despesas.filter(d=>d.data).forEach(d=>todosMeses.add(d.data.slice(0,7)));
+  DB.recebSubLoc.filter(r=>r.data).forEach(r=>todosMeses.add(r.data.slice(0,7)));
+  todosMeses.add(mesAtual);
+  const mesesOrdenados=[...todosMeses].sort().reverse();
+
+  // Agrupar despesas por categoria
+  const despCat={};
+  despMes.forEach(d=>{
+    despCat[d.categoria]=(despCat[d.categoria]||0)+Number(d.valor||0);
+  });
+
+  // Gráfico de barras simples em SVG
+  const maxVal=Math.max(totalRecPac,totalRecSub,...Object.values(despCat),1);
+  const barH=140;
+  const barras=[
+    {label:'Pacientes',val:totalRecPac,cor:'#2a6b72'},
+    {label:'Sublocação',val:totalRecSub,cor:'#5a9a72'},
+    ...Object.entries(despCat).map(([k,v])=>({label:CAT_LABELS[k]||k,val:v,cor:CAT_CORES[k]||'#888',desp:true}))
+  ];
+  const bW=60, bGap=16, svgW=Math.max(400,(barras.length*(bW+bGap))+60);
+  const svgBars=barras.map((b,i)=>{
+    const h=Math.round((b.val/maxVal)*barH)||2;
+    const x=30+i*(bW+bGap);
+    const y=barH-h+20;
+    return`<rect x="${x}" y="${y}" width="${bW}" height="${h}" rx="4" fill="${b.cor}" opacity="${b.desp?0.75:1}"/>
+      <text x="${x+bW/2}" y="${y-5}" text-anchor="middle" font-size="10" fill="${b.cor}" font-family="Nunito,sans-serif">R$${fmtMoeda(b.val).replace('R$','')}</text>
+      <text x="${x+bW/2}" y="${barH+36}" text-anchor="middle" font-size="9" fill="var(--text2)" font-family="Nunito,sans-serif">${b.label.length>10?b.label.slice(0,9)+'…':b.label}</text>`;
+  }).join('');
+
+  document.getElementById('financeiro-wrap').innerHTML=`
+    <!-- Seletor de mês -->
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+      <label style="font-weight:600;font-size:13px">Período:</label>
+      <select id="fin-mes-sel" onchange="renderFinanceiro()" style="padding:7px 12px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:'Nunito',sans-serif;background:var(--surface)">
+        ${mesesOrdenados.map(m=>`<option value="${m}" ${m===mesSel?'selected':''}>${fmtMesAno(m)}</option>`).join('')}
+      </select>
+    </div>
+
+    <!-- Cards de resumo -->
+    <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
+      <div class="stat-card"><div class="stat-label">Receita pacientes</div><div class="stat-value" style="color:var(--brand);font-size:18px">${fmtMoeda(totalRecPac)}</div></div>
+      <div class="stat-card"><div class="stat-label">Receita sublocação</div><div class="stat-value" style="color:#5a9a72;font-size:18px">${fmtMoeda(totalRecSub)}</div></div>
+      <div class="stat-card"><div class="stat-label">Total de despesas</div><div class="stat-value" style="color:var(--coral);font-size:18px">${fmtMoeda(totalDesp)}</div></div>
+      <div class="stat-card" style="border:2px solid ${lucro>=0?'var(--brand)':'var(--coral)'}">
+        <div class="stat-label">Lucro líquido</div>
+        <div class="stat-value" style="color:${lucro>=0?'var(--brand-dark)':'var(--coral)'};font-size:20px;font-weight:700">${fmtMoeda(lucro)}</div>
+      </div>
+    </div>
+
+    <!-- Gráfico -->
+    <div class="card" style="margin-bottom:16px;overflow-x:auto">
+      <div class="section-header"><h3>Visão gráfica do mês</h3></div>
+      <svg width="${svgW}" height="${barH+55}" style="display:block">
+        ${svgBars}
+        <line x1="20" y1="20" x2="20" y2="${barH+20}" stroke="var(--border)" stroke-width="1"/>
+        <line x1="20" y1="${barH+20}" x2="${svgW-10}" y2="${barH+20}" stroke="var(--border)" stroke-width="1"/>
+      </svg>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px">Barras mais opacas = despesas</div>
+    </div>
+
+    <!-- Despesas -->
+    <div class="card" style="margin-bottom:16px">
+      <div class="section-header">
+        <h3>Despesas</h3>
+        <button class="btn btn-primary btn-sm" onclick="openModalDespesa()">+ Nova despesa</button>
+      </div>
+      ${despMes.length?`
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead><tr style="border-bottom:1.5px solid var(--border)">
+          <th style="text-align:left;padding:6px 8px;color:var(--text2);font-weight:600">Descrição</th>
+          <th style="text-align:left;padding:6px 8px;color:var(--text2);font-weight:600">Categoria</th>
+          <th style="text-align:left;padding:6px 8px;color:var(--text2);font-weight:600">Data</th>
+          <th style="text-align:right;padding:6px 8px;color:var(--text2);font-weight:600">Valor</th>
+          <th style="width:60px"></th>
+        </tr></thead>
+        <tbody>
+          ${despMes.map((d,i)=>`<tr style="border-bottom:1px solid var(--border);background:${i%2?'var(--surface2)':''}">
+            <td style="padding:6px 8px">${d.desc}${d.recorrencia==='mensal'?` <span style="font-size:10px;background:var(--surface2);border-radius:20px;padding:1px 6px;color:var(--text2)">mensal</span>`:''}</td>
+            <td style="padding:6px 8px"><span style="background:${CAT_CORES[d.categoria]||'#888'}22;color:${CAT_CORES[d.categoria]||'#888'};border-radius:20px;padding:2px 8px;font-size:11px;font-weight:600">${CAT_LABELS[d.categoria]||d.categoria}</span></td>
+            <td style="padding:6px 8px">${fmtData(d.data)}</td>
+            <td style="padding:6px 8px;text-align:right;font-weight:600;color:var(--coral)">${fmtMoeda(d.valor)}</td>
+            <td style="padding:6px 4px;text-align:right">
+              <button class="btn btn-ghost btn-xs" onclick="openModalDespesa(${d.id})">✎</button>
+              <button class="btn btn-danger btn-xs" onclick="excluirDespesa(${d.id})">✕</button>
+            </td>
+          </tr>`).join('')}
+          <tr style="border-top:2px solid var(--border)">
+            <td colspan="3" style="padding:8px;font-weight:700">Total despesas</td>
+            <td style="padding:8px;text-align:right;font-weight:700;color:var(--coral)">${fmtMoeda(totalDesp)}</td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>`
+      :'<div class="empty"><p>Nenhuma despesa registrada para este período</p></div>'}
+    </div>
+
+    <!-- Sublocações -->
+    <div class="card">
+      <div class="section-header">
+        <h3>Sublocações da sala</h3>
+        <button class="btn btn-primary btn-sm" onclick="openModalSubloc()">+ Cadastrar sublocatário</button>
+      </div>
+      ${(DB.sublocacoes||[]).length?DB.sublocacoes.map(s=>{
+        const recsMes=DB.recebSubLoc.filter(r=>r.sublocId===s.id&&(r.data||'').startsWith(mesSel));
+        const totalMes=recsMes.reduce((a,b)=>a+Number(b.valor||0),0);
+        const telLimpo=(s.tel||'').replace(/\D/g,'');
+        const wppNum=telLimpo.startsWith('55')?telLimpo:'55'+telLimpo;
+        return`<div class="patient-card" style="cursor:default;margin-bottom:10px">
+          <div class="pi">
+            <div class="avatar">${s.nome.charAt(0)}</div>
+            <div>
+              <div class="p-name">${s.nome} <span class="badge ${s.status==='ativo'?'b-active':'b-inactive'}">${s.status}</span></div>
+              <div class="p-meta">${s.profissao||''}${s.profissao&&s.tel?' · ':''}${s.tel?`${s.tel} <a href="https://wa.me/${wppNum}" target="_blank" style="color:#25D366;font-size:11px">WhatsApp</a>`:''}${(s.diaVenc)?` · Vence dia ${s.diaVenc}`:''}</div>
+              <div style="margin-top:4px;font-size:12px">
+                <span style="color:var(--text2)">Valor mensal:</span> <strong>${fmtMoeda(s.valor)}</strong>
+                &nbsp;·&nbsp;
+                <span style="color:var(--text2)">Recebido em ${fmtMesAno(mesSel)}:</span>
+                <strong style="color:${totalMes>0?'var(--brand-dark)':'var(--amber)'}">${fmtMoeda(totalMes)}</strong>
+                ${totalMes===0?`<span style="color:var(--amber);font-size:11px"> ⚠ pendente</span>`:''}
+              </div>
+              ${recsMes.length?`<div style="margin-top:6px">${recsMes.map(r=>`<div style="font-size:11px;color:var(--text2);display:flex;align-items:center;gap:6px">
+                📅 ${fmtData(r.data)} — ${fmtMoeda(r.valor)}${r.ref?' ('+r.ref+')':''}${r.obs?' · '+r.obs:''}
+                <button class="btn btn-ghost" style="padding:1px 5px;font-size:10px" onclick="excluirRecebSubLoc(${r.id})">✕</button>
+              </div>`).join('')}</div>`:''}
+            </div>
+          </div>
+          <div class="p-actions">
+            <button class="btn btn-primary btn-sm" onclick="openModalRecebSubLoc(${s.id})">+ Recebimento</button>
+            <button class="btn btn-ghost btn-sm" onclick="openModalSubloc(${s.id})">Editar</button>
+          </div>
+        </div>`;
+      }).join('')
+      :'<div class="empty"><p>Nenhum sublocatário cadastrado</p></div>'}
+    </div>`;
+}
+
+function fmtMesAno(ym){
+  if(!ym) return '';
+  const [y,m]=ym.split('-');
+  const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  return`${meses[parseInt(m)-1]||m}/${y}`;
 }
 
 // ═══ LISTA DE ESPERA ═══
