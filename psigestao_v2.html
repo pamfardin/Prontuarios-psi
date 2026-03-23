@@ -690,6 +690,39 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
   </div>
 </div>
 
+<!-- MODAL CONFIRMAR PAGAMENTO -->
+<div class="overlay" id="ov-confirmar-pago">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Confirmar pagamento</div>
+        <div class="modal-subtitle" id="cpago-subtitle"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('ov-confirmar-pago')">✕</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="fg">
+        <label>Data do pagamento *</label>
+        <input id="cpago-data" type="date">
+        <span style="font-size:11px;color:var(--text2);margin-top:2px">Importante para emissão no Receita Saúde</span>
+      </div>
+      <div class="fg">
+        <label>Forma de pagamento</label>
+        <select id="cpago-forma">
+          <option value="pix">PIX</option>
+          <option value="dinheiro">Dinheiro</option>
+          <option value="cartao">Cartão</option>
+          <option value="transferencia">Transferência</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('ov-confirmar-pago')">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmarPago()">Confirmar pagamento</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL MUDANÇA -->
 <div class="overlay" id="ov-mudanca">
   <div class="modal">
@@ -1404,11 +1437,6 @@ function salvarPagSup(){
   DB.pagamentosSup.push({id:nextId(DB.pagamentosSup),supId:supAtual,valor:Number(valor),vencimento:document.getElementById('ps-venc').value,dataPgto:document.getElementById('ps-pgto').value,status:document.getElementById('ps-status').value,forma:document.getElementById('ps-forma').value,descricao:document.getElementById('ps-desc').value});
   closeModal('ov-pag-sup');renderAbaSvPag();scheduleSave();toast('Pagamento registrado!');
 }
-function marcarPagoSup(id){
-  const i=(DB.pagamentosSup||[]).findIndex(p=>p.id===id);
-  if(i>=0){DB.pagamentosSup[i].status='pago';DB.pagamentosSup[i].dataPgto=hoje();}
-  renderAbaSvPag();scheduleSave();toast('Marcado como pago!');
-}
 function excluirPagSup(id){
   if(!confirm('Excluir este pagamento?'))return;
   DB.pagamentosSup=(DB.pagamentosSup||[]).filter(p=>p.id!==id);
@@ -2083,11 +2111,45 @@ function salvarPagamento(){
   DB.pagamentos.push({id:nextId(DB.pagamentos),pacienteId:Number(pac),valor:Number(valor),vencimento:document.getElementById('pg-venc').value,dataPgto:document.getElementById('pg-pgto').value,status:document.getElementById('pg-status').value,forma:document.getElementById('pg-forma').value,descricao:document.getElementById('pg-desc').value});
   closeModal('ov-pagamento');renderPagamentos();scheduleSave();toast('Pagamento registrado!');
 }
-function marcarPago(id,fromPac){
-  const i=DB.pagamentos.findIndex(p=>p.id===id);
-  if(i>=0){DB.pagamentos[i].status='pago';DB.pagamentos[i].dataPgto=hoje();}
-  if(fromPac)renderAbaPagPac();else renderPagamentos();
-  scheduleSave();toast('Marcado como pago!');
+let _pagoId=null, _pagoFromPac=false, _pagoIsSup=false;
+
+function marcarPago(id, fromPac){
+  const pg=DB.pagamentos.find(p=>p.id===id);if(!pg)return;
+  const pac=DB.pacientes.find(p=>p.id==pg.pacienteId);
+  _pagoId=id; _pagoFromPac=fromPac; _pagoIsSup=false;
+  document.getElementById('cpago-subtitle').textContent=
+    `${pac?pac.nome:''} — ${fmtMoeda(pg.valor)}${pg.descricao?' · '+pg.descricao:''}`;
+  document.getElementById('cpago-data').value=hoje();
+  document.getElementById('cpago-forma').value=pg.forma||'pix';
+  openModal('ov-confirmar-pago');
+}
+
+function marcarPagoSup(id){
+  const pg=(DB.pagamentosSup||[]).find(p=>p.id===id);if(!pg)return;
+  const sv=(DB.supervisionandas||[]).find(x=>x.id==pg.supId);
+  _pagoId=id; _pagoFromPac=false; _pagoIsSup=true;
+  document.getElementById('cpago-subtitle').textContent=
+    `${sv?sv.nome:''} — ${fmtMoeda(pg.valor)}${pg.descricao?' · '+pg.descricao:''}`;
+  document.getElementById('cpago-data').value=hoje();
+  document.getElementById('cpago-forma').value=pg.forma||'pix';
+  openModal('ov-confirmar-pago');
+}
+
+function confirmarPago(){
+  const data=document.getElementById('cpago-data').value;
+  const forma=document.getElementById('cpago-forma').value;
+  if(!data)return alert('Informe a data do pagamento.');
+  if(_pagoIsSup){
+    const i=(DB.pagamentosSup||[]).findIndex(p=>p.id===_pagoId);
+    if(i>=0){DB.pagamentosSup[i].status='pago';DB.pagamentosSup[i].dataPgto=data;DB.pagamentosSup[i].forma=forma;}
+    closeModal('ov-confirmar-pago');renderAbaSvPag();
+  }else{
+    const i=DB.pagamentos.findIndex(p=>p.id===_pagoId);
+    if(i>=0){DB.pagamentos[i].status='pago';DB.pagamentos[i].dataPgto=data;DB.pagamentos[i].forma=forma;}
+    closeModal('ov-confirmar-pago');
+    if(_pagoFromPac)renderAbaPagPac();else renderPagamentos();
+  }
+  scheduleSave();toast('Pagamento confirmado!');
 }
 function excluirPagamento(id){
   if(!confirm('Excluir este pagamento?'))return;
@@ -2299,76 +2361,76 @@ function exportarPDFFinanceiro(){
 
 function imprimirPDF(){
   const cfg=DB.configuracoes||{};
-  const nomePdf=cfg.nome||'Pâmela Fardin Pedruzzi';
-  const crpPdf=cfg.crp||'CRP 16/5981';
+  const pf=DB.perfil||{};
+  const nomePdf=cfg.nome||pf.nome||'Pâmela Fardin Pedruzzi';
+  const crpPdf=cfg.crp||pf.crp||'CRP 16/5981';
+  const especialidade=cfg.especialidade||pf.especialidade||'Psicóloga';
+  const tel=pf.tel||'';
+  const email=pf.email||'pamfardin@hotmail.com';
+  const endereco=pf.endereco||'';
 
-  // SVG do galho como marca d'água (base64 inline)
-  const galhoSVG=`<svg xmlns="http://www.w3.org/2000/svg" width="260" height="360" viewBox="0 0 38 52" fill="none">
-    <path d="M19 50 C19 50 19 20 19 8" stroke="#2a6b72" stroke-width="1.2" stroke-linecap="round"/>
-    <path d="M19 32 Q10 24 8 14" stroke="#2a6b72" stroke-width="1" stroke-linecap="round"/>
-    <ellipse cx="8" cy="14" rx="6" ry="10" transform="rotate(-30 8 14)" stroke="#2a6b72" stroke-width="1" fill="none"/>
-    <path d="M19 26 Q28 18 30 8" stroke="#2a6b72" stroke-width="1" stroke-linecap="round"/>
-    <ellipse cx="30" cy="8" rx="6" ry="10" transform="rotate(30 30 8)" stroke="#2a6b72" stroke-width="1" fill="none"/>
-    <path d="M19 40 Q12 34 10 26" stroke="#2a6b72" stroke-width="1" stroke-linecap="round"/>
-    <ellipse cx="10" cy="26" rx="5" ry="8" transform="rotate(-25 10 26)" stroke="#2a6b72" stroke-width="1" fill="none"/>
-    <path d="M19 36 Q26 30 28 22" stroke="#2a6b72" stroke-width="1" stroke-linecap="round"/>
-    <ellipse cx="28" cy="22" rx="5" ry="8" transform="rotate(25 28 22)" stroke="#2a6b72" stroke-width="1" fill="none"/>
-  </svg>`;
+  const galhoSVG=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 38 52" fill="none"><path d="M19 50 C19 50 19 20 19 8" stroke="#2a6b72" stroke-width="1.2" stroke-linecap="round"/><path d="M19 32 Q10 24 8 14" stroke="#2a6b72" stroke-width="1" stroke-linecap="round"/><ellipse cx="8" cy="14" rx="6" ry="10" transform="rotate(-30 8 14)" stroke="#2a6b72" stroke-width="1" fill="none"/><path d="M19 26 Q28 18 30 8" stroke="#2a6b72" stroke-width="1" stroke-linecap="round"/><ellipse cx="30" cy="8" rx="6" ry="10" transform="rotate(30 30 8)" stroke="#2a6b72" stroke-width="1" fill="none"/><path d="M19 40 Q12 34 10 26" stroke="#2a6b72" stroke-width="1" stroke-linecap="round"/><ellipse cx="10" cy="26" rx="5" ry="8" transform="rotate(-25 10 26)" stroke="#2a6b72" stroke-width="1" fill="none"/><path d="M19 36 Q26 30 28 22" stroke="#2a6b72" stroke-width="1" stroke-linecap="round"/><ellipse cx="28" cy="22" rx="5" ry="8" transform="rotate(25 28 22)" stroke="#2a6b72" stroke-width="1" fill="none"/></svg>`;
   const galhoB64='data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(galhoSVG)));
 
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html><head>
-<meta charset="UTF-8">
-<title>${nomePdf}</title>
+<meta charset="UTF-8"><title>${nomePdf}</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Nunito:wght@400;600&display=swap');
-  *{box-sizing:border-box}
-  body{font-family:'Nunito',Georgia,serif;margin:0;padding:0;color:#1a2e2e;background:#fff;position:relative}
-
-  /* ── MARCA D'ÁGUA ── */
-  .marca-dagua{
-    position:fixed;
-    top:50%;left:50%;
-    transform:translate(-50%,-50%) rotate(-20deg);
-    width:300px;height:300px;
-    opacity:.055;
-    pointer-events:none;
-    z-index:0;
-  }
-  .marca-dagua img{width:100%;height:100%;object-fit:contain}
-  .rodape-marca{
-    position:fixed;
-    bottom:20px;left:0;right:0;
-    text-align:center;
-    font-family:'Cormorant Garamond',serif;
-    font-size:10px;
-    letter-spacing:3px;
-    text-transform:uppercase;
-    color:#2a6b72;
-    opacity:.4;
-    pointer-events:none;
-    z-index:0;
-  }
-
-  /* ── CONTEÚDO ── */
-  .pdf-wrap{position:relative;z-index:1;padding:36px 44px}
-
-  @media print{
-    .marca-dagua{position:fixed}
-    .rodape-marca{position:fixed}
-    .pdf-wrap{padding:24px 32px}
-    @page{margin:12mm 14mm}
-  }
-</style>
-</head>
-<body>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Nunito:wght@300;400;500;600&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:210mm;min-height:297mm;background:#fff}
+.marca-dagua{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-18deg);width:280px;height:280px;opacity:.045;pointer-events:none;z-index:0}
+.marca-dagua img{width:100%;height:100%;object-fit:contain}
+.page{position:relative;z-index:1;width:210mm;min-height:297mm;display:flex;flex-direction:column;background:#fff}
+.header-timbrado{padding:28px 44px 22px;display:flex;align-items:center;justify-content:center;flex-direction:column;border-bottom:1.5px solid #e0eff0}
+.header-inner{display:flex;align-items:center;gap:16px}
+.header-galho{width:42px;height:58px;flex-shrink:0}
+.header-galho img{width:100%;height:100%;object-fit:contain}
+.header-mini-galho{width:20px;height:28px;flex-shrink:0;opacity:.6}
+.header-mini-galho img{width:100%;height:100%;object-fit:contain}
+.header-divider{width:1px;height:52px;background:#c8d8d8;flex-shrink:0}
+.header-nome{font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:400;color:#1a4548;letter-spacing:2.5px;text-transform:uppercase;line-height:1.2}
+.header-crp{font-family:'Nunito',sans-serif;font-size:10px;font-weight:600;color:#4a6868;letter-spacing:2px;text-transform:uppercase;margin-top:4px}
+.conteudo{flex:1;padding:32px 44px 24px;font-family:'Nunito',sans-serif;font-size:13px;line-height:1.8;color:#1a2e2e}
+.footer-timbrado{padding:0 44px 24px}
+.footer-infos{display:flex;gap:24px;flex-wrap:wrap;font-family:'Nunito',sans-serif;font-size:9.5px;color:#4a6868;letter-spacing:.3px;margin-top:10px}
+.footer-item{display:flex;align-items:center;gap:5px}
+.footer-dot{width:6px;height:6px;border-radius:50%;background:#2a6b72;flex-shrink:0}
+@media print{
+  html,body{margin:0;padding:0}
+  .marca-dagua{position:fixed}
+  @page{size:A4;margin:0}
+}
+</style></head><body>
 <div class="marca-dagua"><img src="${galhoB64}" alt=""></div>
-<div class="rodape-marca">${nomePdf} · ${crpPdf}</div>
-<div class="pdf-wrap">${pdfConteudoAtual}</div>
+<div class="page">
+  <div class="header-timbrado">
+    <div class="header-inner">
+      <div class="header-galho"><img src="${galhoB64}" alt=""></div>
+      <div class="header-divider"></div>
+      <div>
+        <div class="header-nome">${nomePdf}</div>
+        <div class="header-crp">${especialidade}&nbsp;&nbsp;·&nbsp;&nbsp;${crpPdf}</div>
+      </div>
+      <div class="header-mini-galho"><img src="${galhoB64}" alt=""></div>
+    </div>
+  </div>
+  <div class="conteudo">${pdfConteudoAtual}</div>
+  <div class="footer-timbrado">
+    <svg viewBox="0 0 794 36" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block">
+      <path d="M0 28 Q200 2 420 18 Q620 34 794 8 L794 36 L0 36 Z" fill="#e0eff0" opacity=".8"/>
+      <path d="M0 33 Q200 8 420 24 Q620 40 794 14 L794 36 L0 36 Z" fill="#2a6b72" opacity=".2"/>
+    </svg>
+    <div class="footer-infos">
+      ${tel?`<div class="footer-item"><div class="footer-dot"></div><span>${tel}</span></div>`:''}
+      ${email?`<div class="footer-item"><div class="footer-dot"></div><span>${email}</span></div>`:''}
+      ${endereco?`<div class="footer-item"><div class="footer-dot"></div><span>${endereco}</span></div>`:''}
+    </div>
+  </div>
+</div>
 </body></html>`);
-  w.document.close();
-  w.focus();
-  setTimeout(()=>w.print(),600);
+  w.document.close();w.focus();
+  setTimeout(()=>w.print(),700);
 }
 
 // ═══ PERSONALIZAÇÃO ═══
