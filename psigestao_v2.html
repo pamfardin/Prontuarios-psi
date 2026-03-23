@@ -297,10 +297,28 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
         <div class="page-title" style="margin-bottom:0">Pacientes</div>
         <div style="display:flex;gap:8px;align-items:center">
           <input class="search-in" id="busca-pac" placeholder="Buscar paciente..." oninput="renderPacientes()" style="width:190px">
+          <button class="btn btn-ghost btn-sm" onclick="showTabPacientes('espera')">Lista de espera <span id="badge-espera" style="background:var(--amber);color:#fff;border-radius:20px;padding:1px 7px;font-size:11px;font-weight:700;margin-left:4px"></span></button>
           <button class="btn btn-primary" onclick="openModalPaciente()">+ Novo paciente</button>
         </div>
       </div>
+
+      <!-- TABS -->
+      <div class="tabs" style="margin-bottom:16px">
+        <button class="tab active" id="tab-pac-ativos" onclick="showTabPacientes('ativos')">Pacientes ativos</button>
+        <button class="tab" id="tab-pac-todos" onclick="showTabPacientes('todos')">Todos</button>
+        <button class="tab" id="tab-pac-espera" onclick="showTabPacientes('espera')">Lista de espera</button>
+      </div>
+
       <div id="lista-pacientes"></div>
+
+      <!-- LISTA DE ESPERA -->
+      <div id="lista-espera-wrap" style="display:none">
+        <div class="section-header">
+          <h3 style="font-size:15px">Lista de espera</h3>
+          <button class="btn btn-primary btn-sm" onclick="openModalEspera()">+ Adicionar à fila</button>
+        </div>
+        <div id="lista-espera"></div>
+      </div>
     </div>
 
     <!-- AGENDA -->
@@ -680,6 +698,42 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
   </div>
 </div>
 
+<!-- MODAL LISTA DE ESPERA -->
+<div class="overlay" id="ov-espera">
+  <div class="modal">
+    <div class="modal-header">
+      <div><div class="modal-title" id="esp-titulo">Adicionar à lista de espera</div></div>
+      <button class="modal-close" onclick="closeModal('ov-espera')">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="fg form-full"><label>Nome completo *</label><input id="esp-nome" placeholder="Nome da pessoa"></div>
+      <div class="fg"><label>Telefone / WhatsApp *</label><input id="esp-tel" placeholder="(00) 00000-0000"></div>
+      <div class="fg"><label>Email</label><input id="esp-email" type="email" placeholder="email@exemplo.com"></div>
+      <div class="fg form-full"><label>Serviço desejado *</label>
+        <select id="esp-servico">
+          <option value="">Selecionar...</option>
+          <option value="Psicoterapia">Psicoterapia</option>
+          <option value="Orientação profissional">Orientação profissional</option>
+          <option value="Avaliação psicológica">Avaliação psicológica</option>
+          <option value="Supervisão">Supervisão</option>
+        </select>
+      </div>
+      <div class="fg"><label>Data de entrada na fila</label><input id="esp-data" type="date"></div>
+      <div class="fg"><label>Prioridade</label>
+        <select id="esp-prioridade">
+          <option value="normal">Normal</option>
+          <option value="urgente">Urgente</option>
+        </select>
+      </div>
+      <div class="fg form-full"><label>Observações</label><textarea id="esp-obs" rows="2" placeholder="Demanda trazida, disponibilidade de horário, encaminhamento..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('ov-espera')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarEspera()">Salvar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL CONFIRMAR PAGAMENTO -->
 <div class="overlay" id="ov-confirmar-pago">
   <div class="modal" style="max-width:420px">
@@ -1053,7 +1107,7 @@ const EMAILS_AUTORIZADOS = [
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 let tokenClient,driveFileId=null,saveTimer=null;
-let DB={pacientes:[],sessoes:[],prontuarios:[],pagamentos:[],configuracoes:{},perfil:{},supervisionandas:[],encontros:[],pagamentosSup:[]};
+let DB={pacientes:[],sessoes:[],prontuarios:[],pagamentos:[],configuracoes:{},perfil:{},supervisionandas:[],encontros:[],pagamentosSup:[],listaEspera:[]};
 let pacAtual=null,sessAtual=null;
 let mesAtual=new Date().getMonth(),anoAtual=new Date().getFullYear();
 let filtroStatus='todos';
@@ -1151,6 +1205,7 @@ async function loadData(){
       DB.supervisionandas=DB.supervisionandas||[];
       DB.encontros=DB.encontros||[];
       DB.pagamentosSup=DB.pagamentosSup||[];
+      DB.listaEspera=DB.listaEspera||[];
     }
   }catch(e){console.warn(e)}
 }
@@ -1207,7 +1262,7 @@ function showPage(p){
   document.getElementById('page-'+p).classList.add('active');
   document.querySelectorAll('.nav-btn').forEach(b=>{if(b.getAttribute('onclick').includes("'"+p+"'"))b.classList.add('active')});
   if(p==='dashboard')renderDashboard();
-  if(p==='pacientes')renderPacientes();
+  if(p==='pacientes'){showTabPacientes('ativos');atualizarBadgeEspera();}
   if(p==='agenda'){renderAgenda();atualizarBotaoSync();}
   if(p==='pagamentos')renderPagamentos();
   if(p==='configuracoes'){renderConfiguracoes();renderConfiguracaoCalendar();renderPersonalizacao();}
@@ -1649,10 +1704,159 @@ function renderDashboard(){
     </div>`}).join(''):'<div class="empty"><p>Nenhum pagamento pendente</p></div>';
 }
 
+// ═══ LISTA DE ESPERA ═══
+const SERVICOS_CORES={
+  'Psicoterapia':       {bg:'var(--blue-light)',    color:'var(--blue)'},
+  'Orientação profissional': {bg:'var(--purple-light)', color:'var(--purple)'},
+  'Avaliação psicológica':   {bg:'var(--amber-light)',  color:'var(--amber)'},
+  'Supervisão':         {bg:'var(--teal-light)',    color:'var(--teal-dark)'},
+};
+
+function showTabPacientes(tab){
+  document.querySelectorAll('#page-pacientes .tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(`tab-pac-${tab==='espera'?'espera':tab==='todos'?'todos':'ativos'}`)?.classList.add('active');
+  const listaWrap=document.getElementById('lista-pacientes');
+  const esperaWrap=document.getElementById('lista-espera-wrap');
+  if(tab==='espera'){
+    listaWrap.style.display='none';
+    esperaWrap.style.display='block';
+    renderEspera();
+  }else{
+    listaWrap.style.display='block';
+    esperaWrap.style.display='none';
+    renderPacientes(tab);
+  }
+}
+
+let editandoEsperaId=null;
+function openModalEspera(id){
+  editandoEsperaId=id||null;
+  document.getElementById('esp-titulo').textContent=id?'Editar pessoa na fila':'Adicionar à lista de espera';
+  if(id){
+    const p=(DB.listaEspera||[]).find(x=>x.id===id);
+    if(p){
+      document.getElementById('esp-nome').value=p.nome||'';
+      document.getElementById('esp-tel').value=p.tel||'';
+      document.getElementById('esp-email').value=p.email||'';
+      document.getElementById('esp-servico').value=p.servico||'';
+      document.getElementById('esp-data').value=p.dataEntrada||'';
+      document.getElementById('esp-prioridade').value=p.prioridade||'normal';
+      document.getElementById('esp-obs').value=p.obs||'';
+    }
+  }else{
+    ['esp-nome','esp-tel','esp-email','esp-obs'].forEach(i=>document.getElementById(i).value='');
+    document.getElementById('esp-servico').value='';
+    document.getElementById('esp-data').value=hoje();
+    document.getElementById('esp-prioridade').value='normal';
+  }
+  openModal('ov-espera');
+}
+
+function salvarEspera(){
+  const nome=document.getElementById('esp-nome').value.trim();
+  const tel=document.getElementById('esp-tel').value.trim();
+  const servico=document.getElementById('esp-servico').value;
+  if(!nome)return alert('Informe o nome.');
+  if(!tel)return alert('Informe o telefone.');
+  if(!servico)return alert('Selecione o serviço desejado.');
+  if(!DB.listaEspera)DB.listaEspera=[];
+  const dados={nome,tel,email:document.getElementById('esp-email').value,servico,dataEntrada:document.getElementById('esp-data').value,prioridade:document.getElementById('esp-prioridade').value,obs:document.getElementById('esp-obs').value,status:'aguardando'};
+  if(editandoEsperaId){
+    const i=DB.listaEspera.findIndex(x=>x.id===editandoEsperaId);
+    if(i>=0)DB.listaEspera[i]={...DB.listaEspera[i],...dados};
+  }else{
+    dados.id=nextId(DB.listaEspera);
+    dados.criadoEm=hoje();
+    DB.listaEspera.push(dados);
+  }
+  closeModal('ov-espera');
+  renderEspera();
+  atualizarBadgeEspera();
+  scheduleSave();
+  toast('Salvo na lista de espera!');
+}
+
+function renderEspera(){
+  const lista=DB.listaEspera||[];
+  const el=document.getElementById('lista-espera');
+  if(!lista.length){
+    el.innerHTML='<div class="empty"><p>Nenhuma pessoa na lista de espera</p></div>';
+    return;
+  }
+  // ordenar: urgente primeiro, depois por data de entrada
+  const ordenada=[...lista].sort((a,b)=>{
+    if(a.prioridade==='urgente'&&b.prioridade!=='urgente')return -1;
+    if(b.prioridade==='urgente'&&a.prioridade!=='urgente')return 1;
+    return (a.dataEntrada||'')>(b.dataEntrada||'')?1:-1;
+  });
+  el.innerHTML=ordenada.map((p,idx)=>{
+    const cor=SERVICOS_CORES[p.servico]||{bg:'var(--surface2)',color:'var(--text2)'};
+    const diasEspera=p.dataEntrada?Math.floor((new Date()-new Date(p.dataEntrada))/(1000*60*60*24)):0;
+    return`<div class="patient-card" style="border-left:4px solid ${cor.color};cursor:default;margin-bottom:10px">
+      <div class="pi" style="gap:14px">
+        <div style="background:var(--surface2);border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--text2);font-size:13px;flex-shrink:0">${idx+1}</div>
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <div class="p-name">${p.nome}</div>
+            ${p.prioridade==='urgente'?`<span style="background:#faeae4;color:#c94f2a;border-radius:20px;padding:2px 8px;font-size:11px;font-weight:700">Urgente</span>`:''}
+          </div>
+          <div class="p-meta" style="margin-top:3px">${p.tel}${p.email?' · '+p.email:''}</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+            <span style="background:${cor.bg};color:${cor.color};border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700">${p.servico}</span>
+            <span style="font-size:11px;color:var(--text2)">Na fila há ${diasEspera} dia(s)${p.dataEntrada?' · desde '+fmtData(p.dataEntrada):''}</span>
+          </div>
+          ${p.obs?`<div style="font-size:12px;color:var(--text2);margin-top:4px;font-style:italic">${p.obs}</div>`:''}
+        </div>
+      </div>
+      <div class="p-actions">
+        <button class="btn btn-primary btn-sm" onclick="converterParaPaciente(${p.id})">→ Tornar paciente</button>
+        <button class="btn btn-ghost btn-sm" onclick="openModalEspera(${p.id})">Editar</button>
+        <button class="btn btn-danger btn-sm" onclick="removerEspera(${p.id})">Remover</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function removerEspera(id){
+  if(!confirm('Remover da lista de espera?'))return;
+  DB.listaEspera=(DB.listaEspera||[]).filter(x=>x.id!==id);
+  renderEspera();atualizarBadgeEspera();scheduleSave();
+}
+
+function converterParaPaciente(id){
+  const p=(DB.listaEspera||[]).find(x=>x.id===id);
+  if(!p)return;
+  if(!confirm(`Converter ${p.nome} para paciente ativo e remover da lista de espera?`))return;
+  // pré-preencher modal de paciente com os dados da espera
+  editandoPacId=null;
+  document.getElementById('mp-titulo').textContent='Novo paciente';
+  document.getElementById('mp-nome').value=p.nome||'';
+  document.getElementById('mp-tel').value=p.tel||'';
+  document.getElementById('mp-email').value=p.email||'';
+  document.getElementById('mp-status').value='ativo';
+  ['mp-nasc','mp-valor','mp-hora','mp-queixa','mp-obj'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('mp-freq').value='semanal';
+  document.getElementById('mp-dia').value='';
+  document.getElementById('mp-nsess').value='0';
+  // remover da espera
+  DB.listaEspera=(DB.listaEspera||[]).filter(x=>x.id!==id);
+  atualizarBadgeEspera();scheduleSave();
+  // abrir modal de paciente para completar o cadastro
+  openModal('ov-paciente');
+  showTabPacientes('ativos');
+}
+
+function atualizarBadgeEspera(){
+  const n=(DB.listaEspera||[]).length;
+  const badge=document.getElementById('badge-espera');
+  if(badge)badge.textContent=n>0?n:'';
+}
+
 // ═══ PACIENTES ═══
-function renderPacientes(){
+function renderPacientes(tab){
   const busca=(document.getElementById('busca-pac')?.value||'').toLowerCase();
-  const lista=DB.pacientes.filter(p=>p.nome.toLowerCase().includes(busca));
+  let lista=DB.pacientes.filter(p=>p.nome.toLowerCase().includes(busca));
+  if(!tab||tab==='ativos') lista=lista.filter(p=>p.status==='ativo');
   const el=document.getElementById('lista-pacientes');
   el.innerHTML=lista.length?lista.map(p=>{
     const nSess=DB.sessoes.filter(s=>s.pacienteId===p.id&&s.status==='realizado').length;
