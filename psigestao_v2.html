@@ -7,7 +7,7 @@
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://apis.google.com/js/api.js" async defer></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Nunito:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Nunito:wght@300;400;500;600&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
   --bg:#f4f1ec;--surface:#fdfcfa;--surface2:#ede9e2;--border:#ddd8cf;
@@ -28,37 +28,38 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
 .login-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);padding:52px 44px;text-align:center;max-width:420px;width:92%;box-shadow:var(--shadow)}
 .denied-card{background:var(--surface);border:1.5px solid var(--coral);border-radius:var(--radius-xl);padding:52px 44px;text-align:center;max-width:420px;width:92%;box-shadow:var(--shadow)}
 .denied-icon{font-size:48px;margin-bottom:16px}
-.denied-title{font-family:'Lora',serif;font-size:24px;color:var(--coral);margin-bottom:10px}
+.denied-title{font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--coral);margin-bottom:10px}
 .denied-msg{font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:24px}
 .denied-email{font-size:13px;font-weight:700;color:var(--text);background:var(--surface2);padding:8px 16px;border-radius:var(--radius);display:inline-block;margin:8px 0 20px}
-.login-logo{font-family:'Lora',serif;font-size:38px;color:var(--teal-dark);letter-spacing:-1px}
+.login-logo{font-family:'Cormorant Garamond',serif;font-size:38px;color:var(--teal-dark);letter-spacing:-1px}
 .login-logo em{color:var(--coral);font-style:italic}
 .login-tagline{font-size:13px;color:var(--text2);margin:10px 0 36px;line-height:1.7}
 .btn-google{display:flex;align-items:center;justify-content:center;gap:10px;padding:13px 24px;border:1.5px solid var(--border);border-radius:var(--radius);background:var(--surface);cursor:pointer;font-family:'Nunito',sans-serif;font-size:14px;font-weight:600;color:var(--text);transition:all .2s;width:100%}
-.btn-google:hover{border-color:var(--teal);background:var(--teal-light)}
+.btn-google:hover{border-color:var(--brand);background:var(--brand-light)}
 .login-note{font-size:11px;color:var(--text3);margin-top:20px;line-height:1.7}
 
 /* ── APP SHELL ── */
 #app{display:none;flex-direction:column;min-height:100vh}
 .header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:58px;gap:12px;position:sticky;top:0;z-index:50}
-.logo{font-family:'Lora',serif;font-size:22px;color:var(--teal-dark);flex-shrink:0;letter-spacing:-.5px}
+.logo{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--teal-dark);flex-shrink:0;letter-spacing:-.5px}
 .logo em{color:var(--coral);font-style:italic}
 .nav{display:flex;gap:2px;overflow-x:auto}
 .nav-btn{padding:7px 15px;border:none;background:none;border-radius:var(--radius);cursor:pointer;font-family:'Nunito',sans-serif;font-size:13px;font-weight:500;color:var(--text2);transition:all .18s;white-space:nowrap}
 .nav-btn:hover{background:var(--surface2)}
-.nav-btn.active{background:var(--teal-light);color:var(--teal-dark);font-weight:600}
+.nav-btn.active{background:var(--brand-light);color:var(--brand-dark);font-weight:600}
 .header-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
-.sync-dot{width:8px;height:8px;border-radius:50%;background:var(--teal);flex-shrink:0;transition:background .3s}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:var(--brand);flex-shrink:0;transition:background .3s}
 .sync-dot.syncing{background:var(--amber);animation:pulse 1s infinite}
 .sync-dot.error{background:var(--coral)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes spin{to{transform:rotate(360deg)}}
 .sync-label{font-size:11px;color:var(--text3)}
 .user-pic{width:30px;height:30px;border-radius:50%;object-fit:cover;border:2px solid var(--teal-light)}
 .btn-out{padding:4px 10px;border:1px solid var(--border);border-radius:var(--radius);background:none;cursor:pointer;font-size:12px;color:var(--text2);font-family:'Nunito',sans-serif}
 
 .main{flex:1;padding:24px;max-width:1040px;margin:0 auto;width:100%}
 .page{display:none}.page.active{display:block}
-.page-title{font-family:'Lora',serif;font-size:28px;color:var(--text);margin-bottom:22px}
+.page-title{font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--text);margin-bottom:22px}
 
 /* ── CARDS ── */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px;margin-bottom:16px;box-shadow:var(--shadow)}
@@ -67,7 +68,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
 
 /* ── BUTTONS ── */
 .btn{padding:8px 18px;border-radius:var(--radius);border:none;cursor:pointer;font-family:'Nunito',sans-serif;font-size:13px;font-weight:600;transition:all .18s}
-.btn-primary{background:var(--teal);color:#fff}.btn-primary:hover{background:var(--teal-dark)}
+.btn-primary{background:var(--brand);color:#fff}.btn-primary:hover{background:var(--brand-dark)}
 .btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border)}.btn-secondary:hover{background:var(--border)}
 .btn-danger{background:var(--coral-light);color:var(--coral)}.btn-danger:hover{background:var(--coral);color:#fff}
 .btn-ghost{background:none;border:1.5px solid var(--border);color:var(--text2)}.btn-ghost:hover{border-color:var(--teal);color:var(--teal)}
@@ -80,7 +81,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
 .fg{display:flex;flex-direction:column;gap:5px}
 .fg label{font-size:12px;color:var(--text2);font-weight:600;letter-spacing:.2px}
 .fg input,.fg select,.fg textarea{padding:9px 11px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:'Nunito',sans-serif;font-size:13px;background:var(--surface);color:var(--text);outline:none;transition:border .15s}
-.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--teal)}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--brand)}
 .fg textarea{resize:vertical;min-height:90px;line-height:1.6}
 
 /* ── BADGES ── */
@@ -100,20 +101,20 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
 .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
 .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;box-shadow:var(--shadow)}
 .stat-label{font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
-.stat-value{font-family:'Lora',serif;font-size:30px;color:var(--text)}
+.stat-value{font-family:'Cormorant Garamond',serif;font-size:30px;color:var(--text)}
 
 /* ── PATIENT CARDS ── */
 .patient-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;transition:all .18s;cursor:pointer;margin-bottom:10px;box-shadow:var(--shadow)}
-.patient-card:hover{border-color:var(--teal);transform:translateY(-1px)}
+.patient-card:hover{border-color:var(--brand);transform:translateY(-1px)}
 .pi{display:flex;align-items:center;gap:14px}
-.avatar{width:42px;height:42px;border-radius:50%;background:var(--teal-light);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:var(--teal-dark);flex-shrink:0;border:2px solid var(--teal-light)}
+.avatar{width:42px;height:42px;border-radius:50%;background:var(--brand-light);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:var(--brand-dark);flex-shrink:0;border:2px solid var(--teal-light)}
 .p-name{font-weight:600;font-size:14px}
 .p-meta{font-size:12px;color:var(--text2);margin-top:3px}
 .p-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 
 /* ── AGENDA ── */
 .month-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-.month-nav h3{font-family:'Lora',serif;font-size:22px}
+.month-nav h3{font-family:'Cormorant Garamond',serif;font-size:22px}
 .agenda-header{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px}
 .day-name{text-align:center;font-size:11px;color:var(--text2);font-weight:700;padding:4px;text-transform:uppercase;letter-spacing:.4px}
 .agenda-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
@@ -135,7 +136,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
 /* ── PAY ITEMS ── */
 .pay-item{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-lg);margin-bottom:8px;flex-wrap:wrap;gap:8px}
 .pay-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.pay-value{font-family:'Lora',serif;font-size:20px}
+.pay-value{font-family:'Cormorant Garamond',serif;font-size:20px}
 
 /* ── MODALS ── */
 .overlay{display:none;position:fixed;inset:0;background:rgba(20,16,12,.45);z-index:200;align-items:center;justify-content:center;padding:16px}
@@ -143,7 +144,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
 .modal{background:var(--surface);border-radius:var(--radius-xl);padding:28px;width:100%;max-width:580px;max-height:92vh;overflow-y:auto;box-shadow:0 16px 48px rgba(0,0,0,.18)}
 .modal-lg{max-width:720px}
 .modal-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;gap:12px}
-.modal-title{font-family:'Lora',serif;font-size:22px;line-height:1.2}
+.modal-title{font-family:'Cormorant Garamond',serif;font-size:22px;line-height:1.2}
 .modal-subtitle{font-size:12px;color:var(--text2);margin-top:4px}
 .modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--text3);line-height:1;flex-shrink:0;margin-top:2px}
 .modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:22px;padding-top:16px;border-top:1px solid var(--border)}
@@ -151,12 +152,12 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
 /* ── TABS ── */
 .tabs{display:flex;gap:2px;border-bottom:2px solid var(--border);margin-bottom:22px}
 .tab{padding:9px 18px;border:none;background:none;cursor:pointer;font-family:'Nunito',sans-serif;font-size:13px;font-weight:500;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s}
-.tab.active{color:var(--teal-dark);border-bottom-color:var(--teal);font-weight:700}
+.tab.active{color:var(--brand-dark);border-bottom-color:var(--brand);font-weight:700}
 
 /* ── PRONTUÁRIO PAC ── */
 .pront-section{margin-bottom:20px}
 .pront-section-title{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
-.pront-section-title::before{content:'';display:inline-block;width:3px;height:14px;background:var(--teal);border-radius:2px}
+.pront-section-title::before{content:'';display:inline-block;width:3px;height:14px;background:var(--brand);border-radius:2px}
 .humor-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
 .humor-btn{padding:10px 6px;border:1.5px solid var(--border);border-radius:var(--radius);cursor:pointer;text-align:center;background:var(--surface);transition:all .15s;font-family:'Nunito',sans-serif}
 .humor-btn:hover{border-color:var(--teal)}
@@ -170,7 +171,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
 .tec-tag:hover{border-color:var(--teal)}
 .tec-tag.selected{border-color:var(--teal);background:var(--teal-light);color:var(--teal-dark);font-weight:700}
 
-.evolucao-card{border-left:4px solid var(--teal);padding:14px 18px;background:var(--surface);border-radius:0 var(--radius-lg) var(--radius-lg) 0;margin-bottom:12px;box-shadow:var(--shadow)}
+.evolucao-card{border-left:4px solid var(--brand);padding:14px 18px;background:var(--surface);border-radius:0 var(--radius-lg) var(--radius-lg) 0;margin-bottom:12px;box-shadow:var(--shadow)}
 .ev-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px}
 .ev-date{font-size:12px;font-weight:700;color:var(--teal-dark)}
 .ev-field{margin-bottom:10px}
@@ -189,8 +190,8 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
 .empty svg{opacity:.3;margin-bottom:12px}
 .empty p{font-size:13px}
 .search-in{padding:9px 13px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:'Nunito',sans-serif;font-size:13px;background:var(--surface);color:var(--text);outline:none}
-.search-in:focus{border-color:var(--teal)}
-.toast{position:fixed;bottom:28px;right:28px;background:var(--teal-dark);color:#fff;padding:11px 20px;border-radius:var(--radius);font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;box-shadow:var(--shadow)}
+.search-in:focus{border-color:var(--brand)}
+.toast{position:fixed;bottom:28px;right:28px;background:var(--brand-dark);color:#fff;padding:11px 20px;border-radius:var(--radius);font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;box-shadow:var(--shadow)}
 .toast.show{opacity:1}
 .config-banner{background:var(--amber-light);border:1.5px solid var(--amber);border-radius:var(--radius-lg);padding:18px 22px;margin-bottom:22px}
 .config-banner h3{font-size:14px;font-weight:700;color:var(--amber);margin-bottom:6px}
@@ -216,13 +217,17 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
 <!-- LOGIN -->
 <div id="login-screen">
   <div class="login-card">
-    <div class="login-logo">Psi<em>Gestão</em></div>
-    <p class="login-tagline">Prontuários, agenda e pagamentos<br>para psicólogos. Seus dados no seu Drive.</p>
-    <button class="btn-google" id="btn-signin">
-      <svg width="20" height="20" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-      Entrar com Google
-    </button>
-    <p class="login-note">Dados salvos no seu Google Drive.<br>Nenhuma informação é enviada a terceiros.</p>
+    <div id="login-auto" style="text-align:center;padding:16px 0;display:none">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:8px">Entrando automaticamente...</div>
+      <div style="width:32px;height:32px;border:3px solid var(--brand-light);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto"></div>
+    </div>
+    <div id="login-manual">
+      <button class="btn-google" id="btn-signin">
+        <svg width="20" height="20" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+        Entrar com Google
+      </button>
+      <p class="login-note">Dados salvos no seu Google Drive.<br>Nenhuma informação é enviada a terceiros.</p>
+    </div>
   </div>
 </div>
 
@@ -243,7 +248,23 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
 <!-- APP -->
 <div id="app">
   <header class="header">
-    <div class="logo">Psi<em>Gestão</em></div>
+    <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+      <svg width="18" height="26" viewBox="0 0 38 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M19 50 C19 50 19 20 19 8" stroke="#2a6b72" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M19 32 Q10 24 8 14" stroke="#2a6b72" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+        <ellipse cx="8" cy="14" rx="6" ry="10" transform="rotate(-30 8 14)" stroke="#2a6b72" stroke-width="1.2" fill="none"/>
+        <path d="M19 26 Q28 18 30 8" stroke="#2a6b72" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+        <ellipse cx="30" cy="8" rx="6" ry="10" transform="rotate(30 30 8)" stroke="#2a6b72" stroke-width="1.2" fill="none"/>
+        <path d="M19 40 Q12 34 10 26" stroke="#2a6b72" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+        <ellipse cx="10" cy="26" rx="5" ry="8" transform="rotate(-25 10 26)" stroke="#2a6b72" stroke-width="1.2" fill="none"/>
+        <path d="M19 36 Q26 30 28 22" stroke="#2a6b72" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+        <ellipse cx="28" cy="22" rx="5" ry="8" transform="rotate(25 28 22)" stroke="#2a6b72" stroke-width="1.2" fill="none"/>
+      </svg>
+      <div style="line-height:1">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:13px;font-weight:400;color:#2a6b72;letter-spacing:2px;text-transform:uppercase">PÂMELA FARDIN PEDRUZZI</div>
+        <div style="font-family:'Nunito',sans-serif;font-size:9px;color:#4a6868;letter-spacing:1.5px;text-transform:uppercase;margin-top:1px">PSICÓLOGA</div>
+      </div>
+    </div>
     <nav class="nav">
       <button class="nav-btn active" onclick="showPage('dashboard')">Início</button>
       <button class="nav-btn" onclick="showPage('pacientes')">Pacientes</button>
@@ -964,32 +985,60 @@ function initGoogle(){
   }
   gapi.load('client',async()=>{
     await gapi.client.init({discoveryDocs:['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest']});
-    tokenClient=google.accounts.oauth2.initTokenClient({
-      client_id:CLIENT_ID,
-      scope:SCOPES,
-      callback:async r=>{
-        if(r.error)return;
-        // buscar e-mail do usuário logado
-        try{
-          const resp=await fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{'Authorization':'Bearer '+r.access_token}});
-          const info=await resp.json();
-          emailLogado=(info.email||'').toLowerCase();
-          // verificar autorização
-          if(EMAILS_AUTORIZADOS.length>0&&!EMAILS_AUTORIZADOS.map(e=>e.toLowerCase()).includes(emailLogado)){
-            document.getElementById('login-screen').style.display='none';
-            document.getElementById('denied-email-display').textContent=emailLogado;
-            document.getElementById('denied-screen').style.display='flex';
-            return;
-          }
-          // mostrar foto do usuário
-          if(info.picture)document.getElementById('user-pic').src=info.picture;
-          document.getElementById('user-pic').title=emailLogado;
-        }catch(e){console.warn('Não foi possível buscar perfil',e)}
-        await loadData();showApp();
+
+    const onToken=async r=>{
+      if(r.error){
+        // falha silenciosa — mostrar botão de login manual
+        document.getElementById('login-auto').style.display='none';
+        document.getElementById('login-manual').style.display='block';
+        return;
       }
+      // guardar e-mail para renovações futuras
+      try{
+        const resp=await fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{'Authorization':'Bearer '+r.access_token}});
+        const info=await resp.json();
+        emailLogado=(info.email||'').toLowerCase();
+        if(EMAILS_AUTORIZADOS.length>0&&!EMAILS_AUTORIZADOS.map(e=>e.toLowerCase()).includes(emailLogado)){
+          document.getElementById('login-screen').style.display='none';
+          document.getElementById('denied-email-display').textContent=emailLogado;
+          document.getElementById('denied-screen').style.display='flex';
+          return;
+        }
+        if(info.picture)document.getElementById('user-pic').src=info.picture;
+        document.getElementById('user-pic').title=emailLogado;
+        // guardar hint do e-mail para próximo acesso
+        localStorage.setItem('psigestao_hint',emailLogado);
+        // renovar token automaticamente 5 min antes de expirar
+        const expiresIn=(r.expires_in||3600)-300;
+        setTimeout(()=>renovarToken(),expiresIn*1000);
+      }catch(e){console.warn('Perfil não disponível',e)}
+      await loadData();showApp();
+    };
+
+    tokenClient=google.accounts.oauth2.initTokenClient({
+      client_id:CLIENT_ID,scope:SCOPES,callback:onToken
     });
-    document.getElementById('btn-signin').onclick=()=>tokenClient.requestAccessToken({prompt:'consent'});
+
+    // tentar login silencioso se houver hint salvo
+    const hint=localStorage.getItem('psigestao_hint');
+    if(hint){
+      document.getElementById('login-auto').style.display='block';
+      document.getElementById('login-manual').style.display='none';
+      tokenClient.requestAccessToken({prompt:'',login_hint:hint});
+    }else{
+      document.getElementById('login-auto').style.display='none';
+      document.getElementById('login-manual').style.display='block';
+    }
+
+    document.getElementById('btn-signin').onclick=()=>tokenClient.requestAccessToken({prompt:'select_account'});
   });
+}
+
+function renovarToken(){
+  const hint=localStorage.getItem('psigestao_hint');
+  if(tokenClient&&hint){
+    tokenClient.requestAccessToken({prompt:'',login_hint:hint});
+  }
 }
 async function loadData(){
   try{
@@ -1047,7 +1096,11 @@ function saveClientId(){
   if(!v)return alert('Informe o Client ID.');
   localStorage.setItem('psigestao_cid',v);location.reload();
 }
-function signOut(){if(google?.accounts)google.accounts.oauth2.revoke(gapi.auth.getToken()?.access_token||'');location.reload()}
+function signOut(){
+  localStorage.removeItem('psigestao_hint');
+  if(google?.accounts)google.accounts.oauth2.revoke(gapi.auth.getToken()?.access_token||'');
+  location.reload();
+}
 
 // ═══ UI ═══
 function showPage(p){
