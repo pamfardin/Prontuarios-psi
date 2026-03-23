@@ -852,10 +852,12 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
     </div>
     <div class="tabs">
       <button class="tab active" id="tab-dados" onclick="abaTab('dados',this)">Dados do paciente</button>
+      <button class="tab" id="tab-anamnese" onclick="abaTab('anamnese',this)">Anamnese</button>
       <button class="tab" id="tab-sessoes" onclick="abaTab('sessoes',this)">Sessões & Prontuários</button>
       <button class="tab" id="tab-pagpac" onclick="abaTab('pagpac',this)">Pagamentos</button>
     </div>
     <div id="aba-dados"></div>
+    <div id="aba-anamnese" style="display:none"></div>
     <div id="aba-sessoes" style="display:none"></div>
     <div id="aba-pagpac" style="display:none"></div>
   </div>
@@ -1107,7 +1109,7 @@ const EMAILS_AUTORIZADOS = [
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 let tokenClient,driveFileId=null,saveTimer=null;
-let DB={pacientes:[],sessoes:[],prontuarios:[],pagamentos:[],configuracoes:{},perfil:{},supervisionandas:[],encontros:[],pagamentosSup:[],listaEspera:[]};
+let DB={pacientes:[],sessoes:[],prontuarios:[],pagamentos:[],configuracoes:{},perfil:{},supervisionandas:[],encontros:[],pagamentosSup:[],listaEspera:[],anamneses:[]};
 let pacAtual=null,sessAtual=null;
 let mesAtual=new Date().getMonth(),anoAtual=new Date().getFullYear();
 let filtroStatus='todos';
@@ -1206,6 +1208,7 @@ async function loadData(){
       DB.encontros=DB.encontros||[];
       DB.pagamentosSup=DB.pagamentosSup||[];
       DB.listaEspera=DB.listaEspera||[];
+      DB.anamneses=DB.anamneses||[];
     }
   }catch(e){console.warn(e)}
 }
@@ -1930,7 +1933,342 @@ function excluirPaciente(id){
   renderPacientes();scheduleSave();
 }
 
-// ═══ PRONTUÁRIO DO PACIENTE ═══
+// ═══ ANAMNESE ═══
+const ANAMNESES={
+  crianca:{
+    label:'Criança (0–12 anos)',
+    blocos:[
+      {titulo:'Queixa principal e histórico da problemática',campos:[
+        {id:'queixa_desc',label:'Descrição da queixa principal (relatada pelo responsável)',tipo:'textarea'},
+        {id:'queixa_inicio',label:'Quando iniciou? O que estava acontecendo na época?',tipo:'textarea'},
+        {id:'queixa_contexto',label:'Em quais situações o comportamento/problema se manifesta?',tipo:'textarea'},
+        {id:'queixa_freq',label:'Com que frequência e intensidade?',tipo:'textarea'},
+        {id:'queixa_tentativas',label:'O que já foi tentado para resolver?',tipo:'textarea'},
+      ]},
+      {titulo:'Desenvolvimento neuropsicomotor',campos:[
+        {id:'dev_gestacao',label:'Como foi a gestação? Houve intercorrências?',tipo:'textarea'},
+        {id:'dev_parto',label:'Como foi o parto? Houve complicações?',tipo:'select',opcoes:['','Normal sem intercorrências','Cesárea sem intercorrências','Intercorrências no parto','Prematuro']},
+        {id:'dev_marcos',label:'Marcos do desenvolvimento: sentou, andou, falou (idades aproximadas)',tipo:'textarea'},
+        {id:'dev_sono',label:'Como é o sono? Dorme sozinho? Acorda à noite?',tipo:'textarea'},
+        {id:'dev_alimentacao',label:'Como é a alimentação? Seletividade alimentar?',tipo:'textarea'},
+        {id:'dev_controle',label:'Controle esfincteriano (enurese, encoprese)?',tipo:'select',opcoes:['','Adequado para a idade','Enurese noturna','Enurese diurna','Encoprese','Ainda em desenvolvimento']},
+      ]},
+      {titulo:'Saúde e histórico médico',campos:[
+        {id:'saude_doencas',label:'Doenças ou condições de saúde diagnosticadas',tipo:'textarea'},
+        {id:'saude_medicacoes',label:'Uso de medicações (nome, dosagem, motivo)',tipo:'textarea'},
+        {id:'saude_hospitalizacoes',label:'Hospitalizações ou cirurgias anteriores',tipo:'textarea'},
+        {id:'saude_alergia',label:'Alergias',tipo:'input'},
+        {id:'saude_neuro',label:'Diagnósticos neurológicos ou psiquiátricos (TDAH, TEA, etc.)',tipo:'textarea'},
+      ]},
+      {titulo:'Dinâmica familiar',campos:[
+        {id:'fam_composicao',label:'Com quem a criança mora?',tipo:'textarea'},
+        {id:'fam_pais',label:'Situação conjugal dos pais/responsáveis',tipo:'select',opcoes:['','Casados/Unidos','Separados – guarda compartilhada','Separados – guarda unilateral','Falecido(a)','Outro']},
+        {id:'fam_relacoes',label:'Como é a relação da criança com os membros da família?',tipo:'textarea'},
+        {id:'fam_disciplina',label:'Como é exercida a disciplina em casa?',tipo:'textarea'},
+        {id:'fam_historico',label:'Histórico de problemas de saúde mental na família',tipo:'textarea'},
+        {id:'fam_eventos',label:'Eventos significativos na família (separação, luto, mudanças)',tipo:'textarea'},
+      ]},
+      {titulo:'Escolaridade e socialização',campos:[
+        {id:'esc_serie',label:'Ano/série atual e escola',tipo:'input'},
+        {id:'esc_desempenho',label:'Desempenho escolar',tipo:'select',opcoes:['','Ótimo','Bom','Regular','Dificuldades significativas']},
+        {id:'esc_comportamento',label:'Comportamento na escola (relatos de professores)',tipo:'textarea'},
+        {id:'esc_amigos',label:'Como é a socialização com colegas? Tem amigos?',tipo:'textarea'},
+        {id:'esc_atividades',label:'Atividades extracurriculares',tipo:'textarea'},
+      ]},
+      {titulo:'Tratamentos anteriores',campos:[
+        {id:'trat_anterior',label:'Já realizou algum acompanhamento psicológico ou psiquiátrico?',tipo:'select',opcoes:['','Não','Sim – concluído','Sim – em andamento','Sim – interrompido']},
+        {id:'trat_descricao',label:'Se sim, descreva (motivo, duração, resultado)',tipo:'textarea'},
+      ]},
+      {titulo:'Observações complementares',campos:[
+        {id:'obs_geral',label:'Outras informações relevantes',tipo:'textarea'},
+      ]},
+    ]
+  },
+  adolescente:{
+    label:'Adolescente (13–17 anos)',
+    blocos:[
+      {titulo:'Queixa principal e histórico da problemática',campos:[
+        {id:'queixa_resp',label:'Queixa relatada pelo responsável',tipo:'textarea'},
+        {id:'queixa_adol',label:'Como o próprio adolescente descreve o que está sentindo?',tipo:'textarea'},
+        {id:'queixa_inicio',label:'Quando iniciou? O que estava acontecendo na época?',tipo:'textarea'},
+        {id:'queixa_situacoes',label:'Em quais situações o problema se manifesta?',tipo:'textarea'},
+        {id:'queixa_impacto',label:'Como o problema impacta o dia a dia?',tipo:'textarea'},
+      ]},
+      {titulo:'Saúde e histórico médico',campos:[
+        {id:'saude_doencas',label:'Doenças ou condições de saúde diagnosticadas',tipo:'textarea'},
+        {id:'saude_medicacoes',label:'Uso de medicações (nome, dosagem, motivo)',tipo:'textarea'},
+        {id:'saude_sono',label:'Como está o sono? Dorme bem? Quantas horas?',tipo:'textarea'},
+        {id:'saude_alimentacao',label:'Como está a alimentação?',tipo:'textarea'},
+        {id:'saude_auto',label:'Histórico de autolesão ou ideação suicida',tipo:'select',opcoes:['','Não','Sim – passado','Sim – presente','Investigar melhor']},
+        {id:'saude_substancias',label:'Uso de álcool, tabaco ou outras substâncias',tipo:'select',opcoes:['','Não','Experimental','Uso ocasional','Uso frequente']},
+      ]},
+      {titulo:'Dinâmica familiar',campos:[
+        {id:'fam_composicao',label:'Com quem mora?',tipo:'textarea'},
+        {id:'fam_pais',label:'Situação dos pais/responsáveis',tipo:'select',opcoes:['','Casados/Unidos','Separados – guarda compartilhada','Separados – guarda unilateral','Falecido(a)','Outro']},
+        {id:'fam_relacoes',label:'Como é a relação com os pais/responsáveis?',tipo:'textarea'},
+        {id:'fam_conflitos',label:'Há conflitos frequentes em casa?',tipo:'textarea'},
+        {id:'fam_historico',label:'Histórico de problemas de saúde mental na família',tipo:'textarea'},
+        {id:'fam_eventos',label:'Eventos significativos (separação, luto, mudanças, violência)',tipo:'textarea'},
+      ]},
+      {titulo:'Escolaridade e trabalho',campos:[
+        {id:'esc_serie',label:'Ano/série atual e escola',tipo:'input'},
+        {id:'esc_desempenho',label:'Desempenho escolar',tipo:'select',opcoes:['','Ótimo','Bom','Regular','Dificuldades significativas','Parou de estudar']},
+        {id:'esc_motivacao',label:'Como está a motivação para os estudos?',tipo:'textarea'},
+        {id:'esc_amigos',label:'Como é a socialização com colegas?',tipo:'textarea'},
+        {id:'esc_bullying',label:'Vivência de bullying ou cyberbullying',tipo:'select',opcoes:['','Não','Como vítima','Como autor','Testemunha','Investigar']},
+        {id:'esc_trabalho',label:'Trabalha? Se sim, descreva',tipo:'textarea'},
+      ]},
+      {titulo:'Aspectos psicossociais',campos:[
+        {id:'social_interesses',label:'Interesses, hobbies e atividades de lazer',tipo:'textarea'},
+        {id:'social_relacionamentos',label:'Relacionamentos afetivos/amorosos',tipo:'textarea'},
+        {id:'social_identidade',label:'Questões de identidade (gênero, sexualidade, pertencimento)',tipo:'textarea'},
+        {id:'social_redes',label:'Uso de redes sociais e tempo de tela',tipo:'textarea'},
+        {id:'social_projetos',label:'Planos e projetos para o futuro',tipo:'textarea'},
+      ]},
+      {titulo:'Tratamentos anteriores',campos:[
+        {id:'trat_anterior',label:'Já realizou acompanhamento psicológico ou psiquiátrico?',tipo:'select',opcoes:['','Não','Sim – concluído','Sim – em andamento','Sim – interrompido']},
+        {id:'trat_descricao',label:'Se sim, descreva (motivo, duração, resultado)',tipo:'textarea'},
+      ]},
+      {titulo:'Observações complementares',campos:[
+        {id:'obs_geral',label:'Outras informações relevantes',tipo:'textarea'},
+      ]},
+    ]
+  },
+  adulto:{
+    label:'Adulto (18–59 anos)',
+    blocos:[
+      {titulo:'Queixa principal e histórico da problemática',campos:[
+        {id:'queixa_desc',label:'Como o paciente descreve o motivo da busca por atendimento?',tipo:'textarea'},
+        {id:'queixa_inicio',label:'Quando iniciou? O que estava acontecendo na época?',tipo:'textarea'},
+        {id:'queixa_situacoes',label:'Em quais situações o problema se manifesta?',tipo:'textarea'},
+        {id:'queixa_impacto',label:'Como impacta as áreas da vida (trabalho, relacionamentos, saúde)?',tipo:'textarea'},
+        {id:'queixa_expectativa',label:'O que espera do processo terapêutico?',tipo:'textarea'},
+      ]},
+      {titulo:'Saúde e histórico médico',campos:[
+        {id:'saude_doencas',label:'Doenças ou condições de saúde diagnosticadas',tipo:'textarea'},
+        {id:'saude_medicacoes',label:'Uso de medicações (nome, dosagem, motivo)',tipo:'textarea'},
+        {id:'saude_sono',label:'Como está o sono?',tipo:'select',opcoes:['','Bom','Dificuldade para dormir','Acorda à noite','Dorme demais','Insônia frequente']},
+        {id:'saude_alimentacao',label:'Como está a alimentação?',tipo:'textarea'},
+        {id:'saude_auto',label:'Histórico de autolesão ou ideação suicida',tipo:'select',opcoes:['','Não','Sim – passado','Sim – presente','Investigar melhor']},
+        {id:'saude_substancias',label:'Uso de álcool, tabaco ou outras substâncias',tipo:'select',opcoes:['','Não','Uso social/ocasional','Uso frequente','Dependência']},
+        {id:'saude_psiq',label:'Diagnósticos psiquiátricos anteriores ou atuais',tipo:'textarea'},
+      ]},
+      {titulo:'Dinâmica familiar e vínculos afetivos',campos:[
+        {id:'fam_origem',label:'Como foi sua família de origem? (pais, irmãos, ambiente)',tipo:'textarea'},
+        {id:'fam_atual',label:'Situação atual: mora com quem?',tipo:'textarea'},
+        {id:'fam_conjugal',label:'Situação conjugal/afetiva',tipo:'select',opcoes:['','Solteiro(a)','Namorando','Casado(a)/União estável','Separado(a)/Divorciado(a)','Viúvo(a)']},
+        {id:'fam_filhos',label:'Tem filhos? Quantos? Idades?',tipo:'textarea'},
+        {id:'fam_relacoes',label:'Como avalia seus vínculos afetivos atuais?',tipo:'textarea'},
+        {id:'fam_historico',label:'Histórico de problemas de saúde mental na família',tipo:'textarea'},
+        {id:'fam_eventos',label:'Eventos significativos de vida (perdas, traumas, mudanças)',tipo:'textarea'},
+      ]},
+      {titulo:'Escolaridade e trabalho',campos:[
+        {id:'esc_nivel',label:'Escolaridade',tipo:'select',opcoes:['','Fundamental incompleto','Fundamental completo','Médio incompleto','Médio completo','Superior incompleto','Superior completo','Pós-graduação']},
+        {id:'trab_situacao',label:'Situação profissional atual',tipo:'select',opcoes:['','Empregado CLT','Autônomo/Freelancer','Empresário','Desempregado','Afastado','Aposentado','Do lar','Estudante']},
+        {id:'trab_satisfacao',label:'Como avalia sua satisfação no trabalho/estudo?',tipo:'textarea'},
+        {id:'trab_relacoes',label:'Como são as relações interpessoais no trabalho?',tipo:'textarea'},
+        {id:'trab_estresse',label:'Nível de estresse relacionado ao trabalho',tipo:'select',opcoes:['','Baixo','Moderado','Alto','Muito alto']},
+      ]},
+      {titulo:'Aspectos psicossociais',campos:[
+        {id:'social_lazer',label:'Atividades de lazer e hobbies',tipo:'textarea'},
+        {id:'social_suporte',label:'Rede de suporte social (amigos, grupos)',tipo:'textarea'},
+        {id:'social_espiritualidade',label:'Espiritualidade/religiosidade (se relevante para o paciente)',tipo:'textarea'},
+        {id:'social_financeiro',label:'Situação financeira geral',tipo:'select',opcoes:['','Estável','Instável','Em dificuldade','Endividado']},
+      ]},
+      {titulo:'Tratamentos anteriores',campos:[
+        {id:'trat_anterior',label:'Já realizou acompanhamento psicológico ou psiquiátrico?',tipo:'select',opcoes:['','Não','Sim – concluído','Sim – em andamento','Sim – interrompido']},
+        {id:'trat_descricao',label:'Se sim, descreva (motivo, duração, abordagem, resultado)',tipo:'textarea'},
+      ]},
+      {titulo:'Observações complementares',campos:[
+        {id:'obs_geral',label:'Outras informações relevantes',tipo:'textarea'},
+      ]},
+    ]
+  },
+  idoso:{
+    label:'Idoso (60 anos ou mais)',
+    blocos:[
+      {titulo:'Queixa principal e histórico da problemática',campos:[
+        {id:'queixa_desc',label:'Como o paciente descreve o motivo da busca?',tipo:'textarea'},
+        {id:'queixa_inicio',label:'Quando iniciou? O que estava acontecendo?',tipo:'textarea'},
+        {id:'queixa_impacto',label:'Como impacta o dia a dia e a autonomia?',tipo:'textarea'},
+        {id:'queixa_expectativa',label:'O que espera do processo terapêutico?',tipo:'textarea'},
+      ]},
+      {titulo:'Saúde e histórico médico',campos:[
+        {id:'saude_doencas',label:'Doenças crônicas ou condições de saúde (hipertensão, diabetes, etc.)',tipo:'textarea'},
+        {id:'saude_medicacoes',label:'Medicações em uso (nome, dosagem, motivo)',tipo:'textarea'},
+        {id:'saude_hospitalizacoes',label:'Hospitalizações ou cirurgias recentes',tipo:'textarea'},
+        {id:'saude_dor',label:'Dores crônicas ou limitações físicas',tipo:'textarea'},
+        {id:'saude_cognitivo',label:'Queixas de memória ou declínio cognitivo',tipo:'select',opcoes:['','Não','Queixas leves – sem diagnóstico','Diagnóstico de CCL','Diagnóstico de demência leve','Diagnóstico de demência moderada/grave']},
+        {id:'saude_sono',label:'Como está o sono?',tipo:'select',opcoes:['','Bom','Dificuldade para dormir','Acorda à noite','Dorme demais','Insônia frequente']},
+        {id:'saude_mobilidade',label:'Mobilidade e independência para atividades diárias',tipo:'select',opcoes:['','Totalmente independente','Independente com auxílio leve','Necessita de apoio moderado','Dependente']},
+        {id:'saude_auto',label:'Histórico de ideação suicida ou passividade perante a morte',tipo:'select',opcoes:['','Não','Sim – passado','Sim – presente','Investigar melhor']},
+      ]},
+      {titulo:'Dinâmica familiar e vínculos afetivos',campos:[
+        {id:'fam_composicao',label:'Com quem mora atualmente?',tipo:'textarea'},
+        {id:'fam_conjugal',label:'Situação conjugal',tipo:'select',opcoes:['','Casado(a)/União estável','Viúvo(a)','Separado(a)/Divorciado(a)','Solteiro(a)']},
+        {id:'fam_filhos',label:'Tem filhos? Como é a relação com eles?',tipo:'textarea'},
+        {id:'fam_suporte',label:'Quem oferece suporte afetivo e prático?',tipo:'textarea'},
+        {id:'fam_perdas',label:'Perdas significativas recentes (cônjuge, amigos, familiares)',tipo:'textarea'},
+        {id:'fam_historico',label:'Histórico de problemas de saúde mental na família',tipo:'textarea'},
+      ]},
+      {titulo:'Escolaridade e história ocupacional',campos:[
+        {id:'esc_nivel',label:'Escolaridade',tipo:'select',opcoes:['','Sem escolaridade','Fundamental incompleto','Fundamental completo','Médio','Superior','Pós-graduação']},
+        {id:'trab_historico',label:'Histórico profissional (ocupações principais)',tipo:'textarea'},
+        {id:'trab_aposentadoria',label:'Situação de aposentadoria — como foi essa transição?',tipo:'textarea'},
+        {id:'trab_atividades',label:'Atividades que realiza atualmente (voluntariado, grupos, etc.)',tipo:'textarea'},
+      ]},
+      {titulo:'Aspectos psicossociais e qualidade de vida',campos:[
+        {id:'social_lazer',label:'Atividades de lazer e hobbies',tipo:'textarea'},
+        {id:'social_suporte',label:'Rede de suporte social e relações de amizade',tipo:'textarea'},
+        {id:'social_espiritualidade',label:'Espiritualidade/religiosidade',tipo:'textarea'},
+        {id:'social_morte',label:'Como o paciente lida com a perspectiva de finitude?',tipo:'textarea'},
+        {id:'social_autonomia',label:'Como avalia sua qualidade de vida e autonomia atual?',tipo:'textarea'},
+        {id:'social_financeiro',label:'Situação financeira',tipo:'select',opcoes:['','Estável','Instável','Em dificuldade','Dependente de família']},
+      ]},
+      {titulo:'Tratamentos anteriores',campos:[
+        {id:'trat_anterior',label:'Já realizou acompanhamento psicológico ou psiquiátrico?',tipo:'select',opcoes:['','Não','Sim – concluído','Sim – em andamento','Sim – interrompido']},
+        {id:'trat_descricao',label:'Se sim, descreva (motivo, duração, resultado)',tipo:'textarea'},
+      ]},
+      {titulo:'Observações complementares',campos:[
+        {id:'obs_geral',label:'Outras informações relevantes',tipo:'textarea'},
+      ]},
+    ]
+  }
+};
+
+function renderAbaAnamnese(){
+  const p=DB.pacientes.find(x=>x.id===pacAtual);if(!p)return;
+  const anamnese=DB.anamneses?.find(a=>a.pacienteId===pacAtual)||{respostas:{}};
+  const perfilSalvo=anamnese.perfil||'';
+  const el=document.getElementById('aba-anamnese');
+
+  el.innerHTML=`
+    <div style="margin-bottom:20px">
+      <div class="pront-section-title" style="margin-bottom:10px">Perfil da anamnese</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px" id="anamnese-perfil-grid">
+        ${Object.entries(ANAMNESES).map(([key,val])=>`
+          <button onclick="selecionarPerfilAnamnese('${key}')"
+            class="anamnese-perfil-btn ${perfilSalvo===key?'ativo':''}"
+            data-perfil="${key}"
+            style="padding:12px;border:1.5px solid ${perfilSalvo===key?'var(--brand)':'var(--border)'};border-radius:var(--radius-lg);background:${perfilSalvo===key?'var(--brand-light)':'var(--surface)'};cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:${perfilSalvo===key?'700':'500'};color:${perfilSalvo===key?'var(--brand-dark)':'var(--text2)'};transition:all .15s;text-align:center">
+            ${key==='crianca'?'👧':''}${key==='adolescente'?'🧑':''}${key==='adulto'?'👤':''}${key==='idoso'?'🧓':''}<br>${val.label}
+          </button>`).join('')}
+      </div>
+    </div>
+    <div id="anamnese-form-wrap">
+      ${perfilSalvo?renderFormAnamnese(perfilSalvo,anamnese.respostas||{}):'<div class="empty"><p>Selecione o perfil acima para iniciar a anamnese</p></div>'}
+    </div>`;
+}
+
+function selecionarPerfilAnamnese(perfil){
+  const p=DB.pacientes.find(x=>x.id===pacAtual);if(!p)return;
+  if(!DB.anamneses)DB.anamneses=[];
+  const idx=DB.anamneses.findIndex(a=>a.pacienteId===pacAtual);
+  const respostas=idx>=0?DB.anamneses[idx].respostas:{};
+  // confirmar se já tem dados e está trocando de perfil
+  if(idx>=0&&DB.anamneses[idx].perfil&&DB.anamneses[idx].perfil!==perfil){
+    if(!confirm('Trocar o perfil irá manter as respostas já preenchidas, mas campos diferentes podem não aparecer. Deseja continuar?'))return;
+    DB.anamneses[idx].perfil=perfil;
+  }else if(idx<0){
+    DB.anamneses.push({pacienteId:pacAtual,perfil,respostas:{}});
+  }else{
+    DB.anamneses[idx].perfil=perfil;
+  }
+  // atualizar botões
+  document.querySelectorAll('.anamnese-perfil-btn').forEach(b=>{
+    const ativo=b.dataset.perfil===perfil;
+    b.style.borderColor=ativo?'var(--brand)':'var(--border)';
+    b.style.background=ativo?'var(--brand-light)':'var(--surface)';
+    b.style.fontWeight=ativo?'700':'500';
+    b.style.color=ativo?'var(--brand-dark)':'var(--text2)';
+  });
+  document.getElementById('anamnese-form-wrap').innerHTML=renderFormAnamnese(perfil,respostas);
+}
+
+function renderFormAnamnese(perfil,respostas){
+  const anam=ANAMNESES[perfil];if(!anam)return '';
+  return anam.blocos.map((bloco,bi)=>`
+    <div style="margin-bottom:24px">
+      <div class="pront-section-title">${bloco.titulo}</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        ${bloco.campos.map(campo=>`
+          <div class="fg">
+            <label>${campo.label}</label>
+            ${campo.tipo==='textarea'
+              ?`<textarea id="anm_${campo.id}" rows="2" placeholder="Digite aqui..." onchange="salvarCampoAnamnese('${campo.id}',this.value)">${respostas[campo.id]||''}</textarea>`
+              :campo.tipo==='select'
+              ?`<select id="anm_${campo.id}" onchange="salvarCampoAnamnese('${campo.id}',this.value)">${campo.opcoes.map(o=>`<option value="${o}"${respostas[campo.id]===o?' selected':''}>${o||'Selecionar...'}</option>`).join('')}</select>`
+              :`<input id="anm_${campo.id}" type="text" placeholder="Digite aqui..." value="${respostas[campo.id]||''}" onchange="salvarCampoAnamnese('${campo.id}',this.value)">`
+            }
+          </div>`).join('')}
+      </div>
+    </div>`).join('')+
+    `<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;padding-top:16px;border-top:1px solid var(--border)">
+      <button class="btn btn-ghost btn-sm" onclick="exportarAnamnesePDF()">Exportar PDF</button>
+      <button class="btn btn-primary" onclick="salvarAnamneseCompleta()">Salvar anamnese</button>
+    </div>`;
+}
+
+function salvarCampoAnamnese(id,valor){
+  if(!DB.anamneses)DB.anamneses=[];
+  const idx=DB.anamneses.findIndex(a=>a.pacienteId===pacAtual);
+  if(idx>=0){
+    if(!DB.anamneses[idx].respostas)DB.anamneses[idx].respostas={};
+    DB.anamneses[idx].respostas[id]=valor;
+  }
+}
+
+function salvarAnamneseCompleta(){
+  // Coletar todos os campos visíveis
+  if(!DB.anamneses)DB.anamneses=[];
+  const idx=DB.anamneses.findIndex(a=>a.pacienteId===pacAtual);
+  if(idx<0)return toast('Selecione um perfil primeiro.');
+  const perfil=DB.anamneses[idx].perfil;
+  const anam=ANAMNESES[perfil];
+  if(!anam)return;
+  anam.blocos.forEach(bloco=>{
+    bloco.campos.forEach(campo=>{
+      const el=document.getElementById('anm_'+campo.id);
+      if(el)DB.anamneses[idx].respostas[campo.id]=el.value;
+    });
+  });
+  DB.anamneses[idx].atualizadoEm=hoje();
+  scheduleSave();
+  toast('Anamnese salva!');
+}
+
+function exportarAnamnesePDF(){
+  salvarAnamneseCompleta();
+  const p=DB.pacientes.find(x=>x.id===pacAtual);
+  const an=DB.anamneses?.find(a=>a.pacienteId===pacAtual);
+  if(!an||!an.perfil)return alert('Salve a anamnese antes de exportar.');
+  const anam=ANAMNESES[an.perfil];
+  const cfg=DB.configuracoes||{};
+  let html=`<div style="font-family:'Nunito',sans-serif;color:#1a2e2e">
+    <div style="text-align:center;border-bottom:2px solid #2a6b72;padding-bottom:12px;margin-bottom:20px">
+      <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#2a6b72;font-weight:600">${cfg.nome||''}${cfg.crp?' · CRP '+cfg.crp:''}</div>
+      <div style="font-size:10px;color:#888;margin-top:3px">Emitido em ${fmtData(hoje())}</div>
+    </div>
+    <div style="font-size:16px;font-weight:700;color:#1a4548;margin-bottom:4px">ANAMNESE — ${anam.label.toUpperCase()}</div>
+    <div style="font-size:13px;color:#4a6868;margin-bottom:20px">Paciente: ${p?p.nome:''}</div>`;
+  anam.blocos.forEach(bloco=>{
+    html+=`<div style="margin-bottom:18px">
+      <div style="font-size:11px;font-weight:700;color:#2a6b72;text-transform:uppercase;letter-spacing:1px;border-left:3px solid #2a6b72;padding-left:8px;margin-bottom:10px">${bloco.titulo}</div>`;
+    bloco.campos.forEach(campo=>{
+      const resp=an.respostas?.[campo.id]||'';
+      if(resp){
+        html+=`<div style="margin-bottom:8px">
+          <div style="font-size:11px;color:#888;margin-bottom:2px">${campo.label}</div>
+          <div style="font-size:12px;line-height:1.6;background:#f5f8f8;padding:8px 10px;border-radius:6px;white-space:pre-wrap">${resp}</div>
+        </div>`;
+      }
+    });
+    html+='</div>';
+  });
+  html+='</div>';
+  pdfConteudoAtual=html;
+  imprimirPDF();
+}
 function abrirProntuario(id){
   pacAtual=id;
   const p=DB.pacientes.find(x=>x.id===id);if(!p)return;
@@ -1939,7 +2277,7 @@ function abrirProntuario(id){
   document.getElementById('pront-subtitle').textContent=`${p.status} · ${nSess} sessões realizadas · ${p.frequencia||''}`;
   document.querySelectorAll('#ov-prontuario .tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('tab-dados').classList.add('active');
-  ['aba-dados','aba-sessoes','aba-pagpac'].forEach(a=>{document.getElementById(a).style.display='none'});
+  ['aba-dados','aba-anamnese','aba-sessoes','aba-pagpac'].forEach(a=>{document.getElementById(a).style.display='none'});
   document.getElementById('aba-dados').style.display='block';
   renderAbaDados();
   openModal('ov-prontuario');
@@ -1947,9 +2285,10 @@ function abrirProntuario(id){
 function abaTab(nome,el){
   document.querySelectorAll('#ov-prontuario .tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
-  ['aba-dados','aba-sessoes','aba-pagpac'].forEach(a=>{document.getElementById(a).style.display='none'});
+  ['aba-dados','aba-anamnese','aba-sessoes','aba-pagpac'].forEach(a=>{document.getElementById(a).style.display='none'});
   document.getElementById('aba-'+nome).style.display='block';
   if(nome==='dados')renderAbaDados();
+  if(nome==='anamnese')renderAbaAnamnese();
   if(nome==='sessoes')renderAbaSessoes();
   if(nome==='pagpac')renderAbaPagPac();
 }
@@ -2256,7 +2595,7 @@ function abrirSessaoDetalhe(sessId){
   document.getElementById('pront-subtitle').textContent=`${p.status} · ${nSess} sessões realizadas`;
   document.querySelectorAll('#ov-prontuario .tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('tab-sessoes').classList.add('active');
-  ['aba-dados','aba-sessoes','aba-pagpac'].forEach(a=>{document.getElementById(a).style.display='none'});
+  ['aba-dados','aba-anamnese','aba-sessoes','aba-pagpac'].forEach(a=>{document.getElementById(a).style.display='none'});
   document.getElementById('aba-sessoes').style.display='block';
   renderAbaSessoes();
   openModal('ov-prontuario');
