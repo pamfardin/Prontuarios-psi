@@ -821,8 +821,17 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
     <div class="form-grid">
       <div class="fg form-full"><label>Nome completo *</label><input id="mp-nome" placeholder="Nome do paciente"></div>
       <div class="fg"><label>Data de nascimento</label><input id="mp-nasc" type="date"></div>
-      <div class="fg"><label>Telefone</label><input id="mp-tel" placeholder="(00) 00000-0000"></div>
+      <div class="fg"><label>Telefone / WhatsApp</label>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input id="mp-tel" placeholder="(00) 00000-0000" style="flex:1">
+          <button type="button" id="mp-wpp-btn" title="Abrir WhatsApp" onclick="abrirWhatsAppCadastro()" style="background:#25D366;border:none;border-radius:8px;padding:6px 8px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          </button>
+        </div>
+      </div>
       <div class="fg"><label>Email</label><input id="mp-email" type="email" placeholder="email@exemplo.com"></div>
+      <div class="fg"><label>CPF <span style="font-size:11px;color:var(--text3)">(opcional)</span></label><input id="mp-cpf" placeholder="000.000.000-00" maxlength="14" oninput="mascaraCPF(this)"></div>
+      <div class="fg"><label>RG <span style="font-size:11px;color:var(--text3)">(opcional)</span></label><input id="mp-rg" placeholder="0000000" maxlength="20"></div>
       <div class="fg"><label>Valor da sessão (R$)</label><input id="mp-valor" type="number" step="0.01" placeholder="0,00"></div>
       <div class="fg"><label>Frequência</label>
         <select id="mp-freq"><option value="semanal">Semanal</option><option value="quinzenal">Quinzenal</option><option value="mensal">Mensal</option></select>
@@ -1869,7 +1878,7 @@ function renderPacientes(tab){
         <div class="avatar">${initials(p.nome)}</div>
         <div>
           <div class="p-name">${p.nome}</div>
-          <div class="p-meta">${p.telefone||''}${p.telefone&&p.email?' · ':''}${p.email||''}</div>
+          <div class="p-meta">${p.telefone?`${p.telefone} <a href="https://wa.me/${(p.telefone.replace(/\D/g,'')).startsWith('55')?p.telefone.replace(/\D/g,''):'55'+p.telefone.replace(/\D/g,'')}" target="_blank" onclick="event.stopPropagation()" title="WhatsApp" style="display:inline-flex;align-items:center;background:#25D366;border-radius:5px;padding:1px 4px;margin-left:4px;vertical-align:middle"><svg width="12" height="12" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>`:''}${p.telefone&&p.email?' · ':''}${p.email||''}</div>
           <div class="p-meta" style="margin-top:3px">${p.valorSessao?fmtMoeda(p.valorSessao)+'/sessão':''} ${p.horario?'· '+diasAbr[p.diaSemana]+' '+p.horario:''} · ${nSess} sessão(ões)</div>
         </div>
       </div>
@@ -1886,7 +1895,7 @@ let editandoPacId=null;
 function openModalPaciente(){
   editandoPacId=null;
   document.getElementById('mp-titulo').textContent='Novo paciente';
-  ['mp-nome','mp-nasc','mp-tel','mp-email','mp-queixa','mp-obj'].forEach(id=>document.getElementById(id).value='');
+  ['mp-nome','mp-nasc','mp-tel','mp-email','mp-cpf','mp-rg','mp-queixa','mp-obj'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('mp-valor').value='';document.getElementById('mp-nsess').value='0';
   document.getElementById('mp-freq').value='semanal';document.getElementById('mp-dia').value='';
   document.getElementById('mp-hora').value='';document.getElementById('mp-status').value='ativo';
@@ -1900,6 +1909,8 @@ function editarPaciente(id){
   document.getElementById('mp-nasc').value=p.nascimento||'';
   document.getElementById('mp-tel').value=p.telefone||'';
   document.getElementById('mp-email').value=p.email||'';
+  document.getElementById('mp-cpf').value=p.cpf||'';
+  document.getElementById('mp-rg').value=p.rg||'';
   document.getElementById('mp-valor').value=p.valorSessao||'';
   document.getElementById('mp-freq').value=p.frequencia||'semanal';
   document.getElementById('mp-dia').value=p.diaSemana!==undefined&&p.diaSemana!==''?p.diaSemana:'';
@@ -1910,10 +1921,16 @@ function editarPaciente(id){
   document.getElementById('mp-obj').value=p.objetivos||'';
   openModal('ov-paciente');
 }
+function abrirWhatsAppCadastro(){
+  const tel=document.getElementById('mp-tel').value.replace(/\D/g,'');
+  if(!tel){toast('Informe o telefone primeiro.');return;}
+  const num=tel.startsWith('55')?tel:'55'+tel;
+  window.open('https://wa.me/'+num,'_blank');
+}
 function salvarPaciente(){
   const nome=document.getElementById('mp-nome').value.trim();
   if(!nome)return alert('Informe o nome.');
-  const dados={nome,nascimento:document.getElementById('mp-nasc').value,telefone:document.getElementById('mp-tel').value,email:document.getElementById('mp-email').value,valorSessao:document.getElementById('mp-valor').value,frequencia:document.getElementById('mp-freq').value,diaSemana:document.getElementById('mp-dia').value,horario:document.getElementById('mp-hora').value,status:document.getElementById('mp-status').value,nSessoes:Number(document.getElementById('mp-nsess').value)||0,queixa:document.getElementById('mp-queixa').value,objetivos:document.getElementById('mp-obj').value};
+  const dados={nome,nascimento:document.getElementById('mp-nasc').value,telefone:document.getElementById('mp-tel').value,email:document.getElementById('mp-email').value,cpf:document.getElementById('mp-cpf').value,rg:document.getElementById('mp-rg').value,valorSessao:document.getElementById('mp-valor').value,frequencia:document.getElementById('mp-freq').value,diaSemana:document.getElementById('mp-dia').value,horario:document.getElementById('mp-hora').value,status:document.getElementById('mp-status').value,nSessoes:Number(document.getElementById('mp-nsess').value)||0,queixa:document.getElementById('mp-queixa').value,objetivos:document.getElementById('mp-obj').value};
   if(editandoPacId){const i=DB.pacientes.findIndex(x=>x.id===editandoPacId);if(i>=0)DB.pacientes[i]={...DB.pacientes[i],...dados};}
   else{dados.id=nextId(DB.pacientes);dados.criadoEm=hoje();DB.pacientes.push(dados);}
   closeModal('ov-paciente');renderPacientes();scheduleSave();toast('Paciente salvo!');
@@ -2295,12 +2312,17 @@ function abaTab(nome,el){
 
 function renderAbaDados(){
   const p=DB.pacientes.find(x=>x.id===pacAtual);if(!p)return;
+  const telLimpo=(p.telefone||'').replace(/\D/g,'');
+  const wppNum=telLimpo.startsWith('55')?telLimpo:'55'+telLimpo;
+  const wppLink=telLimpo?`<a href="https://wa.me/${wppNum}" target="_blank" title="Abrir WhatsApp" style="display:inline-flex;align-items:center;justify-content:center;background:#25D366;border-radius:6px;padding:2px 5px;margin-left:6px;vertical-align:middle"><svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>`:'';
   document.getElementById('aba-dados').innerHTML=`
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
       <div><div class="stat-label">Nome</div><div style="font-weight:600">${p.nome}</div></div>
       <div><div class="stat-label">Nascimento</div><div>${p.nascimento?fmtData(p.nascimento):'—'}</div></div>
-      <div><div class="stat-label">Telefone</div><div>${p.telefone||'—'}</div></div>
+      <div><div class="stat-label">Telefone</div><div style="display:flex;align-items:center">${p.telefone||'—'}${p.telefone?wppLink:''}</div></div>
       <div><div class="stat-label">Email</div><div>${p.email||'—'}</div></div>
+      ${p.cpf?`<div><div class="stat-label">CPF</div><div>${p.cpf}</div></div>`:''}
+      ${p.rg?`<div><div class="stat-label">RG</div><div>${p.rg}</div></div>`:''}
       <div><div class="stat-label">Valor/sessão</div><div style="font-weight:600;color:var(--teal-dark)">${p.valorSessao?fmtMoeda(p.valorSessao):'—'}</div></div>
       <div><div class="stat-label">Frequência</div><div>${p.frequencia||'—'}</div></div>
       <div><div class="stat-label">Dia/horário fixo</div><div>${p.diaSemana!==''&&p.diaSemana!==undefined?diasNome[p.diaSemana]:''} ${p.horario||'—'}</div></div>
