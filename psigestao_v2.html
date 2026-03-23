@@ -959,11 +959,13 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
       <button class="tab active" id="tab-dados" onclick="abaTab('dados',this)">Dados do paciente</button>
       <button class="tab" id="tab-anamnese" onclick="abaTab('anamnese',this)">Anamnese</button>
       <button class="tab" id="tab-sessoes" onclick="abaTab('sessoes',this)">Sessões & Prontuários</button>
+      <button class="tab" id="tab-arquivos" onclick="abaTab('arquivos',this)">📎 Arquivos</button>
       <button class="tab" id="tab-pagpac" onclick="abaTab('pagpac',this)">Pagamentos</button>
     </div>
     <div id="aba-dados"></div>
     <div id="aba-anamnese" style="display:none"></div>
     <div id="aba-sessoes" style="display:none"></div>
+    <div id="aba-arquivos" style="display:none"></div>
     <div id="aba-pagpac" style="display:none"></div>
   </div>
 </div>
@@ -1214,7 +1216,7 @@ const EMAILS_AUTORIZADOS = [
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 let tokenClient,driveFileId=null,saveTimer=null;
-let DB={pacientes:[],sessoes:[],prontuarios:[],pagamentos:[],configuracoes:{},perfil:{},supervisionandas:[],encontros:[],pagamentosSup:[],listaEspera:[],anamneses:[],despesas:[],sublocacoes:[],recebSubLoc:[]};
+let DB={pacientes:[],sessoes:[],prontuarios:[],pagamentos:[],configuracoes:{},perfil:{},supervisionandas:[],encontros:[],pagamentosSup:[],listaEspera:[],anamneses:[],despesas:[],sublocacoes:[],recebSubLoc:[],arquivos:[]};
 let pacAtual=null,sessAtual=null;
 let mesAtual=new Date().getMonth(),anoAtual=new Date().getFullYear();
 let filtroStatus='todos';
@@ -1317,6 +1319,7 @@ async function loadData(){
       DB.despesas=DB.despesas||[];
       DB.sublocacoes=DB.sublocacoes||[];
       DB.recebSubLoc=DB.recebSubLoc||[];
+      DB.arquivos=DB.arquivos||[];
     }
   }catch(e){console.warn(e)}
 }
@@ -2356,6 +2359,163 @@ function excluirPaciente(id){
   renderPacientes();scheduleSave();
 }
 
+// ═══ ARQUIVOS DO PACIENTE ═══
+const ARQUIVO_CATS=[
+  {val:'laudo',label:'Laudo / Relatório',icon:'📄'},
+  {val:'teste',label:'Resultado de teste',icon:'📊'},
+  {val:'receita',label:'Receita / Medicação',icon:'💊'},
+  {val:'exame',label:'Exame médico',icon:'🩺'},
+  {val:'termo',label:'Termo / Contrato',icon:'📝'},
+  {val:'foto',label:'Foto / Imagem',icon:'🖼️'},
+  {val:'outro',label:'Outro',icon:'📎'},
+];
+const ARQUIVO_MAX_MB = 5;
+
+function renderAbaArquivos(){
+  const arqs=(DB.arquivos||[]).filter(a=>a.pacienteId===pacAtual)
+    .sort((a,b)=>b.data>a.data?1:-1);
+  const el=document.getElementById('aba-arquivos');
+  const catMap=Object.fromEntries(ARQUIVO_CATS.map(c=>[c.val,c]));
+
+  el.innerHTML=`
+    <div style="margin-bottom:16px">
+      <div class="section-header" style="margin-bottom:12px">
+        <div class="pront-section-title" style="margin:0">Arquivos anexados</div>
+        <label class="btn btn-primary btn-sm" style="cursor:pointer;margin:0">
+          + Anexar arquivo
+          <input type="file" style="display:none" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv" onchange="anexarArquivo(event)">
+        </label>
+      </div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:12px">
+        Formatos aceitos: imagens, PDF, Word, Excel, TXT · Tamanho máximo: ${ARQUIVO_MAX_MB}MB por arquivo
+      </div>
+
+      ${arqs.length ? arqs.map(a=>{
+        const cat=catMap[a.categoria]||{label:'Arquivo',icon:'📎'};
+        const ehImagem=a.tipo&&a.tipo.startsWith('image/');
+        const ehPdf=a.tipo==='application/pdf';
+        return`<div class="patient-card" style="cursor:default;margin-bottom:10px;align-items:flex-start">
+          <div class="pi" style="gap:12px;align-items:flex-start;flex:1">
+            ${ehImagem
+              ?`<img src="${a.dados}" style="width:56px;height:56px;object-fit:cover;border-radius:8px;flex-shrink:0;border:1px solid var(--border)">`
+              :`<div style="width:56px;height:56px;background:var(--surface2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0">${cat.icon}</div>`
+            }
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:600;font-size:14px;word-break:break-all">${a.nome}</div>
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px">
+                <span style="background:var(--brand-light);color:var(--brand-dark);border-radius:20px;padding:2px 8px;font-size:11px;font-weight:600">${cat.icon} ${cat.label}</span>
+                <span style="font-size:11px;color:var(--text3)">${fmtData(a.data)}</span>
+                <span style="font-size:11px;color:var(--text3)">${formatarTamanho(a.tamanho)}</span>
+              </div>
+              ${a.descricao?`<div style="font-size:12px;color:var(--text2);margin-top:4px;font-style:italic">${a.descricao}</div>`:''}
+            </div>
+          </div>
+          <div class="p-actions" style="flex-shrink:0">
+            <button class="btn btn-ghost btn-sm" onclick="visualizarArquivo('${a.id}')">👁 Ver</button>
+            <button class="btn btn-ghost btn-sm" onclick="baixarArquivo('${a.id}')">⬇ Baixar</button>
+            <button class="btn btn-danger btn-sm" onclick="excluirArquivo('${a.id}')">✕</button>
+          </div>
+        </div>`;
+      }).join('')
+      :'<div class="empty"><p>Nenhum arquivo anexado ainda</p></div>'}
+    </div>`;
+}
+
+function anexarArquivo(event){
+  const file=event.target.files[0];
+  if(!file) return;
+  if(file.size > ARQUIVO_MAX_MB*1024*1024){
+    alert(`Arquivo muito grande. Máximo: ${ARQUIVO_MAX_MB}MB`);
+    event.target.value='';
+    return;
+  }
+  // Abrir mini modal para categoria e descrição
+  const cats=ARQUIVO_CATS.map(c=>`<option value="${c.val}">${c.icon} ${c.label}</option>`).join('');
+  const div=document.createElement('div');
+  div.innerHTML=`
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center">
+      <div style="background:var(--surface);border-radius:var(--radius-xl);padding:28px;max-width:380px;width:92%;box-shadow:0 8px 40px rgba(0,0,0,.18)">
+        <div style="font-weight:700;font-size:16px;margin-bottom:4px">Categorizar arquivo</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:18px;word-break:break-all">${file.name}</div>
+        <div class="fg" style="margin-bottom:12px"><label>Categoria</label>
+          <select id="_arq-cat">${cats}</select>
+        </div>
+        <div class="fg" style="margin-bottom:18px"><label>Descrição (opcional)</label>
+          <input id="_arq-desc" placeholder="Ex: Avaliação neuropsicológica Jan/2026">
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end">
+          <button class="btn btn-secondary" onclick="this.closest('div[style]').remove();document.querySelector('input[type=file]').value=''">Cancelar</button>
+          <button class="btn btn-primary" id="_arq-confirmar">Salvar</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(div);
+
+  div.querySelector('#_arq-confirmar').onclick=()=>{
+    const cat=document.getElementById('_arq-cat').value;
+    const desc=document.getElementById('_arq-desc').value;
+    div.remove();
+    const reader=new FileReader();
+    reader.onload=e=>{
+      if(!DB.arquivos) DB.arquivos=[];
+      const arq={
+        id: 'arq_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),
+        pacienteId: pacAtual,
+        nome: file.name,
+        tipo: file.type,
+        tamanho: file.size,
+        categoria: cat,
+        descricao: desc,
+        data: hoje(),
+        dados: e.target.result
+      };
+      DB.arquivos.push(arq);
+      renderAbaArquivos();
+      scheduleSave();
+      toast('Arquivo anexado!');
+    };
+    reader.readAsDataURL(file);
+  };
+}
+
+function visualizarArquivo(id){
+  const a=(DB.arquivos||[]).find(x=>x.id===id);
+  if(!a) return;
+  const ehImagem=a.tipo&&a.tipo.startsWith('image/');
+  const ehPdf=a.tipo==='application/pdf';
+  const w=window.open('','_blank');
+  if(ehImagem){
+    w.document.write(`<html><head><title>${a.nome}</title><style>body{margin:0;background:#111;display:flex;align-items:center;justify-content:center;min-height:100vh}img{max-width:100%;max-height:100vh;object-fit:contain}</style></head><body><img src="${a.dados}"></body></html>`);
+  }else if(ehPdf){
+    w.document.write(`<html><head><title>${a.nome}</title></head><body style="margin:0;padding:0"><embed src="${a.dados}" type="application/pdf" width="100%" height="100%" style="position:fixed;inset:0"></body></html>`);
+  }else{
+    const link=w.document.createElement('a');
+    link.href=a.dados;link.download=a.nome;
+    w.document.body.appendChild(link);link.click();w.close();
+  }
+}
+
+function baixarArquivo(id){
+  const a=(DB.arquivos||[]).find(x=>x.id===id);
+  if(!a) return;
+  const link=document.createElement('a');
+  link.href=a.dados;link.download=a.nome;
+  link.click();
+}
+
+function excluirArquivo(id){
+  if(!confirm('Excluir este arquivo permanentemente?')) return;
+  DB.arquivos=(DB.arquivos||[]).filter(x=>x.id!==id);
+  renderAbaArquivos();scheduleSave();
+}
+
+function formatarTamanho(bytes){
+  if(!bytes) return '';
+  if(bytes<1024) return bytes+'B';
+  if(bytes<1024*1024) return (bytes/1024).toFixed(1)+'KB';
+  return (bytes/(1024*1024)).toFixed(1)+'MB';
+}
+
 // ═══ ANAMNESE ═══
 const ANAMNESES={
   crianca:{
@@ -2700,7 +2860,7 @@ function abrirProntuario(id){
   document.getElementById('pront-subtitle').textContent=`${p.status} · ${nSess} sessões realizadas · ${p.frequencia||''}`;
   document.querySelectorAll('#ov-prontuario .tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('tab-dados').classList.add('active');
-  ['aba-dados','aba-anamnese','aba-sessoes','aba-pagpac'].forEach(a=>{document.getElementById(a).style.display='none'});
+  ['aba-dados','aba-anamnese','aba-sessoes','aba-arquivos','aba-pagpac'].forEach(a=>{document.getElementById(a).style.display='none'});
   document.getElementById('aba-dados').style.display='block';
   renderAbaDados();
   openModal('ov-prontuario');
@@ -2708,10 +2868,11 @@ function abrirProntuario(id){
 function abaTab(nome,el){
   document.querySelectorAll('#ov-prontuario .tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
-  ['aba-dados','aba-anamnese','aba-sessoes','aba-pagpac'].forEach(a=>{document.getElementById(a).style.display='none'});
+  ['aba-dados','aba-anamnese','aba-sessoes','aba-arquivos','aba-pagpac'].forEach(a=>{document.getElementById(a).style.display='none'});
   document.getElementById('aba-'+nome).style.display='block';
   if(nome==='dados')renderAbaDados();
   if(nome==='anamnese')renderAbaAnamnese();
+  if(nome==='arquivos')renderAbaArquivos();
   if(nome==='sessoes')renderAbaSessoes();
   if(nome==='pagpac')renderAbaPagPac();
 }
@@ -3023,7 +3184,7 @@ function abrirSessaoDetalhe(sessId){
   document.getElementById('pront-subtitle').textContent=`${p.status} · ${nSess} sessões realizadas`;
   document.querySelectorAll('#ov-prontuario .tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('tab-sessoes').classList.add('active');
-  ['aba-dados','aba-anamnese','aba-sessoes','aba-pagpac'].forEach(a=>{document.getElementById(a).style.display='none'});
+  ['aba-dados','aba-anamnese','aba-sessoes','aba-arquivos','aba-pagpac'].forEach(a=>{document.getElementById(a).style.display='none'});
   document.getElementById('aba-sessoes').style.display='block';
   renderAbaSessoes();
   openModal('ov-prontuario');
