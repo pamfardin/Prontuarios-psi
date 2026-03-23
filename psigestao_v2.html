@@ -196,6 +196,12 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
 .config-banner{background:var(--amber-light);border:1.5px solid var(--amber);border-radius:var(--radius-lg);padding:18px 22px;margin-bottom:22px}
 .config-banner h3{font-size:14px;font-weight:700;color:var(--amber);margin-bottom:6px}
 .config-banner p{font-size:13px;color:var(--text2);margin-bottom:12px;line-height:1.6}
+.paleta-btn{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--radius-lg);background:var(--surface);cursor:pointer;font-family:'Nunito',sans-serif;font-size:11px;font-weight:600;color:var(--text2);transition:all .15s;min-width:70px}
+.paleta-btn:hover{border-color:var(--brand);transform:translateY(-1px)}
+.paleta-btn.ativa{border-color:var(--brand);background:var(--brand-light);color:var(--brand-dark)}
+.fonte-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 16px;border:1.5px solid var(--border);border-radius:var(--radius-lg);background:var(--surface);cursor:pointer;font-family:'Nunito',sans-serif;font-size:11px;font-weight:600;color:var(--text2);transition:all .15s;min-width:80px}
+.fonte-btn:hover{border-color:var(--brand);transform:translateY(-1px)}
+.fonte-btn.ativa{border-color:var(--brand);background:var(--brand-light);color:var(--brand-dark)}
 .alert-pront{background:var(--coral-light);border:1.5px solid var(--coral);border-radius:var(--radius-lg);padding:18px 22px;margin-bottom:20px}
 .alert-pront-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px}
 .alert-pront-title{font-size:14px;font-weight:700;color:var(--coral);display:flex;align-items:center;gap:8px}
@@ -426,6 +432,75 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
         </div>
         <div class="modal-footer" style="border:none;padding-top:12px">
           <button class="btn btn-primary" onclick="salvarConfiguracoes()">Salvar dados</button>
+        </div>
+      </div>
+
+      <!-- PERSONALIZAÇÃO -->
+      <div class="card">
+        <div class="section-header"><h3>Personalização</h3><span style="font-size:12px;color:var(--text2)">Cores e fonte do sistema</span></div>
+
+        <div style="margin-bottom:20px">
+          <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Paleta de cores</div>
+          <div style="display:flex;flex-wrap:wrap;gap:10px" id="paletas-grid">
+            <button class="paleta-btn" data-paleta="pamela" onclick="aplicarPaleta('pamela',this)" title="Original">
+              <div style="display:flex;gap:3px"><div style="width:18px;height:18px;border-radius:50%;background:#2a6b72"></div><div style="width:18px;height:18px;border-radius:50%;background:#e0eff0"></div><div style="width:18px;height:18px;border-radius:50%;background:#1a4548"></div></div>
+              <span>Petróleo</span>
+            </button>
+            <button class="paleta-btn" data-paleta="lilas" onclick="aplicarPaleta('lilas',this)" title="Lilás">
+              <div style="display:flex;gap:3px"><div style="width:18px;height:18px;border-radius:50%;background:#7c5cbf"></div><div style="width:18px;height:18px;border-radius:50%;background:#ede8f8"></div><div style="width:18px;height:18px;border-radius:50%;background:#4a3280"></div></div>
+              <span>Lilás</span>
+            </button>
+            <button class="paleta-btn" data-paleta="rosa" onclick="aplicarPaleta('rosa',this)" title="Rosa">
+              <div style="display:flex;gap:3px"><div style="width:18px;height:18px;border-radius:50%;background:#b5557a"></div><div style="width:18px;height:18px;border-radius:50%;background:#faeaf0"></div><div style="width:18px;height:18px;border-radius:50%;background:#7a2e50"></div></div>
+              <span>Rosa</span>
+            </button>
+            <button class="paleta-btn" data-paleta="sage" onclick="aplicarPaleta('sage',this)" title="Verde Sage">
+              <div style="display:flex;gap:3px"><div style="width:18px;height:18px;border-radius:50%;background:#5a8a6a"></div><div style="width:18px;height:18px;border-radius:50%;background:#e8f4ec"></div><div style="width:18px;height:18px;border-radius:50%;background:#2e5c3a"></div></div>
+              <span>Sage</span>
+            </button>
+            <button class="paleta-btn" data-paleta="terracota" onclick="aplicarPaleta('terracota',this)" title="Terracota">
+              <div style="display:flex;gap:3px"><div style="width:18px;height:18px;border-radius:50%;background:#a05540"></div><div style="width:18px;height:18px;border-radius:50%;background:#f8ede8"></div><div style="width:18px;height:18px;border-radius:50%;background:#6a2e1c"></div></div>
+              <span>Terracota</span>
+            </button>
+            <button class="paleta-btn" data-paleta="azul" onclick="aplicarPaleta('azul',this)" title="Azul">
+              <div style="display:flex;gap:3px"><div style="width:18px;height:18px;border-radius:50%;background:#2e6aaf"></div><div style="width:18px;height:18px;border-radius:50%;background:#e4eef8"></div><div style="width:18px;height:18px;border-radius:50%;background:#1a3f70"></div></div>
+              <span>Azul</span>
+            </button>
+            <button class="paleta-btn" data-paleta="cinza" onclick="aplicarPaleta('cinza',this)" title="Grafite">
+              <div style="display:flex;gap:3px"><div style="width:18px;height:18px;border-radius:50%;background:#505a60"></div><div style="width:18px;height:18px;border-radius:50%;background:#eaecee"></div><div style="width:18px;height:18px;border-radius:50%;background:#282e32"></div></div>
+              <span>Grafite</span>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Fonte dos títulos</div>
+          <div style="display:flex;flex-wrap:wrap;gap:10px" id="fontes-grid">
+            <button class="fonte-btn" data-fonte="Cormorant Garamond" onclick="aplicarFonte('Cormorant Garamond',this)">
+              <span style="font-family:'Cormorant Garamond',serif;font-size:18px">Aa</span>
+              <span>Cormorant</span>
+            </button>
+            <button class="fonte-btn" data-fonte="Lora" onclick="aplicarFonte('Lora',this)">
+              <span style="font-family:'Lora',serif;font-size:18px">Aa</span>
+              <span>Lora</span>
+            </button>
+            <button class="fonte-btn" data-fonte="Playfair Display" onclick="aplicarFonte('Playfair Display',this)">
+              <span style="font-family:'Playfair Display',serif;font-size:18px">Aa</span>
+              <span>Playfair</span>
+            </button>
+            <button class="fonte-btn" data-fonte="DM Serif Display" onclick="aplicarFonte('DM Serif Display',this)">
+              <span style="font-family:'DM Serif Display',serif;font-size:18px">Aa</span>
+              <span>DM Serif</span>
+            </button>
+            <button class="fonte-btn" data-fonte="Nunito" onclick="aplicarFonte('Nunito',this)">
+              <span style="font-family:'Nunito',sans-serif;font-size:18px">Aa</span>
+              <span>Nunito</span>
+            </button>
+            <button class="fonte-btn" data-fonte="Inter" onclick="aplicarFonte('Inter',this)">
+              <span style="font-family:'Inter',sans-serif;font-size:18px">Aa</span>
+              <span>Inter</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1112,7 +1187,7 @@ function showPage(p){
   if(p==='pacientes')renderPacientes();
   if(p==='agenda'){renderAgenda();atualizarBotaoSync();}
   if(p==='pagamentos')renderPagamentos();
-  if(p==='configuracoes'){renderConfiguracoes();renderConfiguracaoCalendar();}
+  if(p==='configuracoes'){renderConfiguracoes();renderConfiguracaoCalendar();renderPersonalizacao();}
   if(p==='perfil')renderPerfil();
   if(p==='supervisao')renderSupervisao();
 }
@@ -2232,6 +2307,86 @@ function imprimirPDF(){
   setTimeout(()=>w.print(),500);
 }
 
+// ═══ PERSONALIZAÇÃO ═══
+const PALETAS={
+  pamela:  {brand:'#2a6b72',brandDark:'#1a4548',brandLight:'#e0eff0',bg:'#f5f7f7',surface:'#ffffff',surface2:'#eaf0f0',border:'#c8d8d8',text:'#1a2e2e',text2:'#4a6868',text3:'#8aacac'},
+  lilas:   {brand:'#7c5cbf',brandDark:'#4a3280',brandLight:'#ede8f8',bg:'#f8f6fc',surface:'#ffffff',surface2:'#f0ebfc',border:'#d8cef0',text:'#1e1430',text2:'#5a4880',text3:'#9a88c0'},
+  rosa:    {brand:'#b5557a',brandDark:'#7a2e50',brandLight:'#faeaf0',bg:'#fdf6f9',surface:'#ffffff',surface2:'#fceef4',border:'#f0cedd',text:'#2a1020',text2:'#7a4060',text3:'#c088a0'},
+  sage:    {brand:'#5a8a6a',brandDark:'#2e5c3a',brandLight:'#e8f4ec',bg:'#f5f8f5',surface:'#ffffff',surface2:'#eaf4ec',border:'#c8dece',text:'#1a2e20',text2:'#406050',text3:'#80a890'},
+  terracota:{brand:'#a05540',brandDark:'#6a2e1c',brandLight:'#f8ede8',bg:'#faf6f4',surface:'#ffffff',surface2:'#f8ede8',border:'#e8d0c8',text:'#2a1810',text2:'#704030',text3:'#b08070'},
+  azul:    {brand:'#2e6aaf',brandDark:'#1a3f70',brandLight:'#e4eef8',bg:'#f4f7fc',surface:'#ffffff',surface2:'#eaf0f8',border:'#c8d8ee',text:'#0e1e38',text2:'#3a5880',text3:'#7898c0'},
+  cinza:   {brand:'#505a60',brandDark:'#282e32',brandLight:'#eaecee',bg:'#f4f5f6',surface:'#ffffff',surface2:'#eaecee',border:'#d0d4d8',text:'#14181c',text2:'#505a60',text3:'#909aa0'},
+};
+
+const FONTES_URLS={
+  'Cormorant Garamond':'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&display=swap',
+  'Lora':'https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&display=swap',
+  'Playfair Display':'https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&display=swap',
+  'DM Serif Display':'https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&display=swap',
+  'Nunito':'https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600&display=swap',
+  'Inter':'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap',
+};
+
+function aplicarPaleta(nome,btn){
+  const p=PALETAS[nome];if(!p)return;
+  const r=document.documentElement.style;
+  r.setProperty('--brand',p.brand);
+  r.setProperty('--brand-dark',p.brandDark);
+  r.setProperty('--brand-light',p.brandLight);
+  r.setProperty('--teal',p.brand);
+  r.setProperty('--teal-dark',p.brandDark);
+  r.setProperty('--teal-light',p.brandLight);
+  r.setProperty('--blue',p.brand);
+  r.setProperty('--blue-light',p.brandLight);
+  r.setProperty('--purple',p.brand);
+  r.setProperty('--purple-light',p.brandLight);
+  r.setProperty('--bg',p.bg);
+  r.setProperty('--surface',p.surface);
+  r.setProperty('--surface2',p.surface2);
+  r.setProperty('--border',p.border);
+  r.setProperty('--text',p.text);
+  r.setProperty('--text2',p.text2);
+  r.setProperty('--text3',p.text3);
+  localStorage.setItem('psigestao_paleta',nome);
+  document.querySelectorAll('.paleta-btn').forEach(b=>b.classList.remove('ativa'));
+  if(btn)btn.classList.add('ativa');
+  else document.querySelector(`.paleta-btn[data-paleta="${nome}"]`)?.classList.add('ativa');
+}
+
+function aplicarFonte(nome,btn){
+  // carregar fonte se necessário
+  const url=FONTES_URLS[nome];
+  if(url&&!document.querySelector(`link[data-fonte="${nome}"]`)){
+    const link=document.createElement('link');
+    link.rel='stylesheet';link.href=url;link.dataset.fonte=nome;
+    document.head.appendChild(link);
+  }
+  // aplicar a todos os elementos com font-family serif/display
+  const style=document.getElementById('fonte-override')||document.createElement('style');
+  style.id='fonte-override';
+  const isSerif=['Cormorant Garamond','Lora','Playfair Display','DM Serif Display'].includes(nome);
+  style.textContent=`.page-title,.modal-title,.login-logo,.logo,.month-nav h3,.stat-value,.pay-value,h1,h2,h3{font-family:'${nome}',${isSerif?'serif':'sans-serif'} !important}`;
+  document.head.appendChild(style);
+  localStorage.setItem('psigestao_fonte',nome);
+  document.querySelectorAll('.fonte-btn').forEach(b=>b.classList.remove('ativa'));
+  if(btn)btn.classList.add('ativa');
+  else document.querySelector(`.fonte-btn[data-fonte="${nome}"]`)?.classList.add('ativa');
+}
+
+function carregarPersonalizacao(){
+  const paleta=localStorage.getItem('psigestao_paleta');
+  const fonte=localStorage.getItem('psigestao_fonte');
+  if(paleta)aplicarPaleta(paleta,null);
+  if(fonte)aplicarFonte(fonte,null);
+}
+
+function renderPersonalizacao(){
+  const paleta=localStorage.getItem('psigestao_paleta')||'pamela';
+  const fonte=localStorage.getItem('psigestao_fonte')||'Cormorant Garamond';
+  document.querySelectorAll('.paleta-btn').forEach(b=>b.classList.toggle('ativa',b.dataset.paleta===paleta));
+  document.querySelectorAll('.fonte-btn').forEach(b=>b.classList.toggle('ativa',b.dataset.fonte===fonte));
+}
+
 // ═══ GOOGLE CALENDAR ═══
 let calEventoPendente=null; // guarda dados do evento aguardando confirmação
 
@@ -2420,6 +2575,7 @@ function ofereceCalendarEncontro(encontro){
 
 // ═══ INIT ═══
 window.addEventListener('load',()=>{
+  carregarPersonalizacao();
   const tryInit=()=>{if(typeof gapi!=='undefined'&&typeof google!=='undefined'){gapi.load('client',()=>initGoogle())}else{setTimeout(tryInit,500)}};
   tryInit();
 });
