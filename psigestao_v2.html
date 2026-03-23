@@ -119,17 +119,20 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
 .day-name{text-align:center;font-size:11px;color:var(--text2);font-weight:700;padding:4px;text-transform:uppercase;letter-spacing:.4px}
 .agenda-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
 .a-day{border:1.5px solid var(--border);border-radius:var(--radius);padding:7px;min-height:78px;background:var(--surface);cursor:pointer;transition:all .15s;position:relative}
-.a-day:hover{border-color:var(--teal);background:var(--teal-light)}
-.a-day.today{border-color:var(--teal);background:var(--teal-light)}
-.a-day.today .day-num{color:var(--teal-dark);font-weight:700}
+.a-day:hover{border-color:var(--brand);background:var(--brand-light);transform:translateY(-1px);box-shadow:0 3px 10px rgba(0,0,0,.08)}
+.a-day.today{border-color:var(--brand);background:var(--brand-light)}
+.a-day.today .day-num{color:var(--brand-dark);font-weight:700}
+.a-day.today .day-num::after{content:'';display:inline-block;width:6px;height:6px;background:var(--brand);border-radius:50%;margin-left:4px;vertical-align:middle}
 .a-day.other{opacity:.4;background:var(--surface2)}
+.a-day.has-sessions{border-color:var(--brand-light)}
 .day-num{font-size:12px;font-weight:600;margin-bottom:3px}
 .a-event{font-size:10px;border-radius:4px;padding:2px 5px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
 .a-ev-scheduled{background:var(--blue-light);color:var(--blue)}
 .a-ev-done{background:var(--teal-light);color:var(--teal-dark)}
 .a-ev-missed{background:var(--coral-light);color:var(--coral)}
+.a-day-more{font-size:9px;color:var(--text3);margin-top:2px;font-style:italic}
 .session-list-item{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-lg);margin-bottom:8px;transition:all .15s;flex-wrap:wrap;gap:8px}
-.session-list-item:hover{border-color:var(--teal)}
+.session-list-item:hover{border-color:var(--brand)}
 .sli-left{display:flex;align-items:center;gap:12px}
 .sli-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 
@@ -1076,6 +1079,56 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
 </div>
 
 <!-- SESSÃO / AGENDAMENTO -->
+<!-- PAINEL DO DIA -->
+<div class="overlay" id="ov-dia">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="dia-titulo">Segunda, 12 de março</div>
+        <div class="modal-subtitle" id="dia-subtitle"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('ov-dia')">✕</button>
+    </div>
+    <div id="dia-sessoes-lista"></div>
+    <div class="modal-footer" style="border:none;padding-top:8px">
+      <button class="btn btn-secondary" onclick="closeModal('ov-dia')">Fechar</button>
+      <button class="btn btn-primary" id="dia-nova-sessao-btn">+ Nova sessão neste dia</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDITAR SESSÃO -->
+<div class="overlay" id="ov-editar-sessao">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-header">
+      <div><div class="modal-title">Editar sessão</div><div class="modal-subtitle" id="es-subtitle"></div></div>
+      <button class="modal-close" onclick="closeModal('ov-editar-sessao')">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="fg"><label>Data</label><input id="es-data" type="date"></div>
+      <div class="fg"><label>Horário</label><input id="es-hora" type="time"></div>
+      <div class="fg"><label>Duração (min)</label><input id="es-dur" type="number"></div>
+      <div class="fg"><label>Status</label>
+        <select id="es-status">
+          <option value="agendado">Agendado</option>
+          <option value="realizado">Realizado</option>
+          <option value="remarcado">Remarcado</option>
+          <option value="falta">Falta</option>
+          <option value="cancelado">Cancelado</option>
+        </select>
+      </div>
+      <div class="fg form-full"><label>Modalidade</label>
+        <select id="es-modalidade"><option value="presencial">Presencial</option><option value="online">Online</option></select>
+      </div>
+      <div class="fg form-full"><label>Observação</label><input id="es-obs" placeholder="Observação sobre esta sessão..."></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('ov-editar-sessao')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarEdicaoSessao()">Salvar</button>
+    </div>
+  </div>
+</div>
+
 <div class="overlay" id="ov-sessao">
   <div class="modal">
     <div class="modal-header">
@@ -3149,11 +3202,12 @@ function renderAgenda(){
     const sess=DB.sessoes.filter(s=>s.data===ds);
     const evHtml=sess.slice(0,2).map(s=>{
       const p=DB.pacientes.find(x=>x.id==s.pacienteId);
-      const cls=s.status==='realizado'?'a-ev-done':s.status==='falta'?'a-ev-missed':'a-ev-scheduled';
-      return`<div class="a-event ${cls}">${p?p.nome.split(' ')[0]:'Sessão'}</div>`;
+      const cls=s.status==='realizado'?'a-ev-done':s.status==='falta'?'a-ev-missed':s.status==='cancelado'?'a-ev-missed':'a-ev-scheduled';
+      return`<div class="a-event ${cls}">${s.hora?s.hora+' ':''} ${p?p.nome.split(' ')[0]:'Sessão'}</div>`;
     }).join('');
-    html+=`<div class="a-day${ds===hoje_?' today':''}" onclick="openModalSessao('${ds}',null)">
-      <div class="day-num">${d}</div>${evHtml}
+    const maisHtml=sess.length>2?`<div class="a-day-more">+${sess.length-2} mais</div>`:'';
+    html+=`<div class="a-day${ds===hoje_?' today':''}${sess.length?' has-sessions':''}" onclick="abrirPainelDia('${ds}')">
+      <div class="day-num">${d}</div>${evHtml}${maisHtml}
     </div>`;
   }
   document.getElementById('agenda-cal').innerHTML=html;
@@ -3181,6 +3235,121 @@ function renderAgenda(){
       </div>
     </div>`}).join(''):'<div class="empty"><p>Nenhuma sessão neste mês</p></div>';
 }
+
+function abrirPainelDia(ds){
+  const [ano,mes,dia]=ds.split('-').map(Number);
+  const diasSemana=['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+  const mesesNomeFull=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  const diaSemStr=diasSemana[new Date(ano,mes-1,dia).getDay()];
+  document.getElementById('dia-titulo').textContent=`${diaSemStr}, ${dia} de ${mesesNomeFull[mes-1]} de ${ano}`;
+
+  const sess=DB.sessoes.filter(s=>s.data===ds).sort((a,b)=>(a.hora||'')>(b.hora||'')?1:-1);
+  document.getElementById('dia-subtitle').textContent=sess.length
+    ?`${sess.length} sessão(ões) agendada(s)`
+    :'Nenhuma sessão neste dia';
+
+  const statusColor={agendado:'var(--blue)',realizado:'var(--brand)',remarcado:'var(--amber)',falta:'var(--coral)',cancelado:'var(--text3)'};
+  const statusOpts=['agendado','realizado','remarcado','falta','cancelado'];
+
+  document.getElementById('dia-sessoes-lista').innerHTML = sess.length
+    ? sess.map(s=>{
+        const p=DB.pacientes.find(x=>x.id==s.pacienteId);
+        const pr=DB.prontuarios.find(x=>x.sessaoId===s.id);
+        return`<div style="background:var(--surface2);border-radius:var(--radius-lg);padding:14px;margin-bottom:10px;border-left:4px solid ${statusColor[s.status]||'var(--border)'}">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div class="avatar" style="width:36px;height:36px;font-size:12px;flex-shrink:0">${p?initials(p.nome):'?'}</div>
+              <div>
+                <div style="font-weight:700;font-size:14px">${p?p.nome:'Paciente removido'}</div>
+                <div style="font-size:12px;color:var(--text2)">${s.hora?'às '+s.hora:''}${s.duracao?' · '+s.duracao+'min':''}${s.modalidade?' · '+s.modalidade:''}</div>
+              </div>
+            </div>
+            <select onchange="alterarStatusSessaoDia(${s.id},this.value,this)"
+              style="padding:5px 10px;border:1.5px solid ${statusColor[s.status]||'var(--border)'};border-radius:20px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;color:${statusColor[s.status]||'var(--text2)'};background:var(--surface);cursor:pointer;outline:none">
+              ${statusOpts.map(o=>`<option value="${o}"${s.status===o?' selected':''}>${o.charAt(0).toUpperCase()+o.slice(1)}</option>`).join('')}
+            </select>
+          </div>
+          ${s.obs?`<div style="font-size:12px;color:var(--text2);margin-top:8px;font-style:italic">💬 ${s.obs}</div>`:''}
+          <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+            <button class="btn btn-ghost btn-sm" onclick="abrirEditarSessao(${s.id})">✎ Editar</button>
+            ${p?`<button class="btn btn-ghost btn-sm" onclick="closeModal('ov-dia');abrirProntuario(${p.id})"">👤 Prontuário</button>`:''}
+            ${(s.status==='realizado'||s.status==='agendado')
+              ?pr
+                ?`<button class="btn btn-ghost btn-sm" onclick="closeModal('ov-dia');abrirSessaoDetalhe(${s.id})">📋 ${pr?'Ver prontuário':'Preencher'}</button>`
+                :`<button class="btn btn-primary btn-sm" onclick="closeModal('ov-dia');abrirSessaoDetalhe(${s.id})">📋 Preencher prontuário</button>`
+              :''}
+            <button class="btn btn-danger btn-sm" onclick="excluirSessaoDia(${s.id},'${ds}')">✕ Excluir</button>
+          </div>
+        </div>`;
+      }).join('')
+    : `<div class="empty" style="margin:8px 0"><p>Nenhuma sessão agendada para este dia</p></div>`;
+
+  // Botão nova sessão
+  document.getElementById('dia-nova-sessao-btn').onclick=()=>{
+    closeModal('ov-dia');
+    openModalSessao(ds, null);
+  };
+
+  openModal('ov-dia');
+}
+
+function alterarStatusSessaoDia(id, novoStatus, selectEl){
+  const statusColor={agendado:'var(--blue)',realizado:'var(--brand)',remarcado:'var(--amber)',falta:'var(--coral)',cancelado:'var(--text3)'};
+  alterarStatusSessao(id, novoStatus);
+  // Atualiza visual do select sem fechar o painel
+  if(selectEl){
+    selectEl.style.borderColor=statusColor[novoStatus]||'var(--border)';
+    selectEl.style.color=statusColor[novoStatus]||'var(--text2)';
+  }
+  // Atualiza o subtitle
+  const s=DB.sessoes.find(x=>x.id===id);
+  if(s) document.getElementById('dia-subtitle').textContent=
+    DB.sessoes.filter(x=>x.data===s.data).length+' sessão(ões) agendada(s)';
+}
+
+function excluirSessaoDia(id, ds){
+  if(!confirm('Excluir esta sessão?')) return;
+  excluirSessaoPront(id);
+  // Reabre o painel atualizado
+  setTimeout(()=>abrirPainelDia(ds), 100);
+}
+
+let _editandoSessaoId=null;
+function abrirEditarSessao(id){
+  const s=DB.sessoes.find(x=>x.id===id);
+  if(!s) return;
+  _editandoSessaoId=id;
+  const p=DB.pacientes.find(x=>x.id==s.pacienteId);
+  document.getElementById('es-subtitle').textContent=p?p.nome:'';
+  document.getElementById('es-data').value=s.data||'';
+  document.getElementById('es-hora').value=s.hora||'';
+  document.getElementById('es-dur').value=s.duracao||50;
+  document.getElementById('es-status').value=s.status||'agendado';
+  document.getElementById('es-modalidade').value=s.modalidade||'presencial';
+  document.getElementById('es-obs').value=s.obs||'';
+  openModal('ov-editar-sessao');
+}
+
+function salvarEdicaoSessao(){
+  const i=DB.sessoes.findIndex(x=>x.id===_editandoSessaoId);
+  if(i<0) return;
+  const ds=document.getElementById('es-data').value;
+  DB.sessoes[i]={
+    ...DB.sessoes[i],
+    data:ds,
+    hora:document.getElementById('es-hora').value,
+    duracao:document.getElementById('es-dur').value,
+    status:document.getElementById('es-status').value,
+    modalidade:document.getElementById('es-modalidade').value,
+    obs:document.getElementById('es-obs').value,
+  };
+  closeModal('ov-editar-sessao');
+  renderAgenda();scheduleSave();toast('Sessão atualizada!');
+  // Reabre o painel do dia atualizado
+  setTimeout(()=>abrirPainelDia(ds), 150);
+}
+
+if(mesAtual>11){mesAtual=0;anoAtual++}if(mesAtual<0){mesAtual=11;anoAtual--}renderAgenda()}
 
 function mudarMes(d){mesAtual+=d;if(mesAtual>11){mesAtual=0;anoAtual++}if(mesAtual<0){mesAtual=11;anoAtual--}renderAgenda()}
 
