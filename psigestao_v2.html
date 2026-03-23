@@ -209,12 +209,117 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
 .alert-pront-item:last-child{margin-bottom:0}
 
 @media(max-width:640px){
-  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  /* ── HEADER & NAV ── */
+  .header{padding:0 12px;height:52px}
+  .logo{font-size:18px}
+  .sync-label,.btn-out{display:none}
+  .nav{
+    position:fixed;bottom:0;left:0;right:0;
+    background:var(--surface);
+    border-top:1px solid var(--border);
+    z-index:100;
+    justify-content:space-around;
+    padding:4px 0 max(4px,env(safe-area-inset-bottom));
+    gap:0;
+    overflow-x:visible;
+    box-shadow:0 -2px 12px rgba(0,0,0,.08);
+  }
+  .nav-btn{
+    flex:1;padding:6px 4px 4px;
+    border-radius:8px;
+    font-size:10px;
+    font-weight:500;
+    display:flex;flex-direction:column;align-items:center;gap:2px;
+    min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .nav-btn::before{font-size:18px;line-height:1}
+  .nav-btn[onclick*="dashboard"]::before{content:"🏠"}
+  .nav-btn[onclick*="pacientes"]::before{content:"👤"}
+  .nav-btn[onclick*="agenda"]::before{content:"📅"}
+  .nav-btn[onclick*="pagamentos"]::before{content:"💳"}
+  .nav-btn[onclick*="supervisao"]::before{content:"🎓"}
+  .nav-btn[onclick*="perfil"]::before{content:"⚙️"}
+  .nav-btn[onclick*="configuracoes"]::before{content:"🔧"}
+
+  /* Empurrar conteúdo acima da nav fixa */
+  .main{padding:14px 12px 80px;max-width:100%}
+
+  /* ── GRIDS ── */
+  .stats-grid{grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px}
+  .stat-card{padding:12px}
+  .stat-value{font-size:22px}
   .form-grid{grid-template-columns:1fr}
   .humor-grid{grid-template-columns:repeat(5,1fr)}
-  .main{padding:14px}
-  .modal{padding:18px}
-  .header{padding:0 14px}
+
+  /* ── PAGE TITLE ── */
+  .page-title{font-size:22px;margin-bottom:14px}
+
+  /* ── CARDS ── */
+  .card{padding:14px;margin-bottom:12px}
+
+  /* ── PATIENT CARDS ── */
+  .patient-card{flex-direction:column;align-items:flex-start;gap:10px;padding:14px}
+  .p-actions{width:100%;justify-content:flex-start;flex-wrap:wrap}
+  .p-actions .btn{font-size:11px;padding:5px 10px}
+
+  /* ── SECTION HEADER ── */
+  .section-header{flex-wrap:wrap;gap:8px}
+  .section-header h3{font-size:14px}
+
+  /* ── MODAL ── */
+  .overlay{padding:0;align-items:flex-end}
+  .modal{
+    border-radius:var(--radius-xl) var(--radius-xl) 0 0;
+    max-height:92vh;
+    overflow-y:auto;
+    padding:20px 16px;
+    width:100%;
+    max-width:100%;
+  }
+  .modal-lg{max-height:96vh}
+  .modal-header{margin-bottom:14px}
+  .modal-title{font-size:17px}
+  .modal-footer{padding-top:14px;gap:8px}
+  .modal-footer .btn{flex:1;text-align:center}
+
+  /* ── TABS ── */
+  .tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;gap:4px;padding-bottom:2px}
+  .tab{font-size:12px;padding:7px 12px;white-space:nowrap}
+
+  /* ── AGENDA ── */
+  .month-nav{gap:8px}
+  .month-nav h3{font-size:15px}
+  .cal-grid{gap:2px}
+  .cal-day{min-height:36px;padding:3px;font-size:11px}
+  .cal-header span{font-size:10px}
+
+  /* ── SESSION LIST ── */
+  .session-list-item{flex-direction:column;align-items:flex-start;gap:8px}
+  .sli-right{width:100%;flex-wrap:wrap;gap:6px}
+
+  /* ── PAY ITEMS ── */
+  .pay-item{flex-direction:column;align-items:flex-start;gap:8px;padding:12px}
+  .pay-right{width:100%;flex-wrap:wrap;gap:6px}
+
+  /* ── SEARCH ── */
+  .search-in{width:100% !important}
+
+  /* ── BUTTONS INLINE ── */
+  .btn-sm{padding:5px 10px;font-size:11px}
+  .btn-xs{padding:3px 7px;font-size:10px}
+
+  /* ── PRONTUÁRIO ABA DADOS ── */
+  #aba-dados > div:first-child{grid-template-columns:1fr 1fr !important}
+
+  /* ── FINANCEIRO STATS ── */
+  #financeiro-wrap .stats-grid{grid-template-columns:repeat(2,1fr) !important}
+}
+
+/* Telas muito pequenas (≤360px) */
+@media(max-width:360px){
+  .stats-grid{grid-template-columns:1fr !important}
+  .nav-btn{font-size:9px}
+  .main{padding:10px 8px 76px}
 }
 </style>
 </head>
@@ -273,7 +378,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
     <div class="header-right">
       <div class="sync-dot" id="sync-dot"></div>
       <span class="sync-label" id="sync-label">sincronizado</span>
-      <img class="user-pic" id="user-pic" src="" alt="">
+      <img class="user-pic" id="user-pic" src="" alt="" onclick="if(window.innerWidth<=640)signOut()" style="cursor:pointer" title="Clique para sair (mobile)">
       <button class="btn-out" onclick="signOut()">Sair</button>
     </div>
   </header>
@@ -1375,6 +1480,8 @@ function showPage(p){
   document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active'));
   document.getElementById('page-'+p).classList.add('active');
   document.querySelectorAll('.nav-btn').forEach(b=>{if(b.getAttribute('onclick').includes("'"+p+"'"))b.classList.add('active')});
+  // Scroll ao topo ao trocar de página no mobile
+  window.scrollTo({top:0,behavior:'smooth'});
   if(p==='dashboard')renderDashboard();
   if(p==='pacientes'){showTabPacientes('ativos');atualizarBadgeEspera();}
   if(p==='agenda'){renderAgenda();atualizarBotaoSync();}
