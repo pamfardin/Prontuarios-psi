@@ -68,10 +68,10 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
 
 /* ── BUTTONS ── */
 .btn{padding:8px 18px;border-radius:var(--radius);border:none;cursor:pointer;font-family:'Nunito',sans-serif;font-size:13px;font-weight:600;transition:all .18s}
-.btn-primary{background:var(--brand);color:#fff}.btn-primary:hover{background:var(--brand-dark)}
-.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border)}.btn-secondary:hover{background:var(--border)}
-.btn-danger{background:var(--coral-light);color:var(--coral)}.btn-danger:hover{background:var(--coral);color:#fff}
-.btn-ghost{background:none;border:1.5px solid var(--border);color:var(--text2)}.btn-ghost:hover{border-color:var(--teal);color:var(--teal)}
+.btn-primary{background:var(--brand-dark) !important;color:#ffffff !important;border:none}.btn-primary:hover{background:var(--brand) !important;color:#ffffff !important}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1.5px solid var(--border)}.btn-secondary:hover{background:var(--border)}
+.btn-danger{background:var(--coral-light);color:var(--coral);border:none}.btn-danger:hover{background:var(--coral) !important;color:#fff !important}
+.btn-ghost{background:none;border:1.5px solid var(--border);color:var(--text2)}.btn-ghost:hover{border-color:var(--brand);color:var(--brand-dark)}
 .btn-sm{padding:5px 11px;font-size:12px}
 .btn-xs{padding:3px 8px;font-size:11px}
 
@@ -2060,7 +2060,7 @@ function renderPagamentos(){
         <span class="badge ${pg.status==='pago'?'b-paid':pg.status==='atrasado'?'b-late':'b-pending'}">${pg.status}</span>
         <span class="pay-value">${fmtMoeda(pg.valor)}</span>
         ${pg.status!=='pago'?`<button class="btn btn-primary btn-sm" onclick="marcarPago(${pg.id},false)">Marcar pago</button>`:''}
-        ${pg.status==='pago'?`<button class="btn btn-ghost btn-sm" onclick="abrirReceita(${pg.id})" style="border-color:var(--teal);color:var(--teal-dark)">Receita Saúde</button>`:''}
+        ${pg.status==='pago'?`<button class="btn btn-ghost btn-sm" onclick="abrirReceita(${pg.id})" style="background:var(--brand-dark);color:#fff;border:none">Receita Saúde</button>`:''}
         <button class="btn btn-danger btn-sm" onclick="excluirPagamento(${pg.id})">Excluir</button>
       </div>
     </div>`}).join(''):'<div class="empty"><p>Nenhum pagamento encontrado</p></div>';
@@ -2298,13 +2298,76 @@ function exportarPDFFinanceiro(){
 }
 
 function imprimirPDF(){
+  const cfg=DB.configuracoes||{};
+  const nomePdf=cfg.nome||'Pâmela Fardin Pedruzzi';
+  const crpPdf=cfg.crp||'CRP 16/5981';
+
+  // SVG do galho como marca d'água (base64 inline)
+  const galhoSVG=`<svg xmlns="http://www.w3.org/2000/svg" width="260" height="360" viewBox="0 0 38 52" fill="none">
+    <path d="M19 50 C19 50 19 20 19 8" stroke="#2a6b72" stroke-width="1.2" stroke-linecap="round"/>
+    <path d="M19 32 Q10 24 8 14" stroke="#2a6b72" stroke-width="1" stroke-linecap="round"/>
+    <ellipse cx="8" cy="14" rx="6" ry="10" transform="rotate(-30 8 14)" stroke="#2a6b72" stroke-width="1" fill="none"/>
+    <path d="M19 26 Q28 18 30 8" stroke="#2a6b72" stroke-width="1" stroke-linecap="round"/>
+    <ellipse cx="30" cy="8" rx="6" ry="10" transform="rotate(30 30 8)" stroke="#2a6b72" stroke-width="1" fill="none"/>
+    <path d="M19 40 Q12 34 10 26" stroke="#2a6b72" stroke-width="1" stroke-linecap="round"/>
+    <ellipse cx="10" cy="26" rx="5" ry="8" transform="rotate(-25 10 26)" stroke="#2a6b72" stroke-width="1" fill="none"/>
+    <path d="M19 36 Q26 30 28 22" stroke="#2a6b72" stroke-width="1" stroke-linecap="round"/>
+    <ellipse cx="28" cy="22" rx="5" ry="8" transform="rotate(25 28 22)" stroke="#2a6b72" stroke-width="1" fill="none"/>
+  </svg>`;
+  const galhoB64='data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(galhoSVG)));
+
   const w=window.open('','_blank');
-  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>PsiGestão</title>
-    <style>body{font-family:Georgia,serif;margin:32px;color:#1c1916}@media print{body{margin:16px}}</style>
-    </head><body>${pdfConteudoAtual}</body></html>`);
+  w.document.write(`<!DOCTYPE html><html><head>
+<meta charset="UTF-8">
+<title>${nomePdf}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Nunito:wght@400;600&display=swap');
+  *{box-sizing:border-box}
+  body{font-family:'Nunito',Georgia,serif;margin:0;padding:0;color:#1a2e2e;background:#fff;position:relative}
+
+  /* ── MARCA D'ÁGUA ── */
+  body::before{
+    content:'';
+    position:fixed;
+    top:50%;left:50%;
+    transform:translate(-50%,-50%) rotate(-20deg);
+    width:320px;height:320px;
+    background:url('${galhoB64}') center/contain no-repeat;
+    opacity:.06;
+    pointer-events:none;
+    z-index:0;
+  }
+  body::after{
+    content:'${nomePdf.toUpperCase()}  ·  ${crpPdf}';
+    position:fixed;
+    bottom:28px;left:0;right:0;
+    text-align:center;
+    font-family:'Cormorant Garamond',serif;
+    font-size:10px;
+    letter-spacing:3px;
+    color:#2a6b72;
+    opacity:.35;
+    pointer-events:none;
+    z-index:0;
+  }
+
+  /* ── CONTEÚDO ── */
+  .pdf-wrap{position:relative;z-index:1;padding:36px 44px}
+
+  @media print{
+    body::before{position:fixed}
+    body::after{position:fixed}
+    .pdf-wrap{padding:24px 32px}
+    @page{margin:12mm 14mm}
+  }
+</style>
+</head>
+<body>
+<div class="pdf-wrap">${pdfConteudoAtual}</div>
+</body></html>`);
   w.document.close();
   w.focus();
-  setTimeout(()=>w.print(),500);
+  setTimeout(()=>w.print(),600);
 }
 
 // ═══ PERSONALIZAÇÃO ═══
