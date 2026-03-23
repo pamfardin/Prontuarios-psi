@@ -290,7 +290,10 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
     <div class="page" id="page-agenda">
       <div class="section-header">
         <div class="page-title" style="margin-bottom:0">Agenda</div>
-        <button class="btn btn-primary" onclick="openModalSessao(null,null)">+ Nova sessão</button>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn btn-ghost btn-sm" id="btn-sync-cal" onclick="sincronizarCalendar()" style="display:none">&#8635; Sincronizar Calendar</button>
+          <button class="btn btn-primary" onclick="openModalSessao(null,null)">+ Nova sessão</button>
+        </div>
       </div>
       <div class="card">
         <div class="month-nav">
@@ -402,6 +405,24 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
         </div>
         <div class="modal-footer" style="border:none;padding-top:12px">
           <button class="btn btn-primary" onclick="salvarConfiguracoes()">Salvar dados</button>
+        </div>
+      </div>
+
+      <!-- GOOGLE CALENDAR -->
+      <div class="card">
+        <div class="section-header"><h3>Google Calendar</h3><span style="font-size:12px;color:var(--text2)">Sincronização automática de sessões e encontros</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:var(--surface2);border-radius:var(--radius-lg);margin-bottom:12px">
+          <div>
+            <div style="font-weight:600;font-size:13px">Integração ativa</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:2px">Ao agendar, você poderá personalizar e criar o evento no Calendar</div>
+          </div>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" id="cfg-cal-ativo" onchange="salvarConfigCalendar()" style="width:18px;height:18px;accent-color:var(--teal)">
+            <span style="font-size:13px;font-weight:600" id="cfg-cal-label">Desativado</span>
+          </label>
+        </div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.7;background:var(--blue-light);padding:12px;border-radius:var(--radius);color:var(--blue)">
+          <strong>Para ativar:</strong> acesse o Google Cloud Console → APIs e Serviços → Biblioteca → pesquise "Google Calendar API" → Ativar. Depois volte aqui e marque a opção acima.
         </div>
       </div>
 
@@ -682,6 +703,9 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
       <div class="fg"><label>Status</label>
         <select id="ms-status"><option value="agendado">Agendado</option><option value="realizado">Realizado</option><option value="cancelado">Cancelado</option><option value="falta">Falta</option></select>
       </div>
+      <div class="fg"><label>Modalidade</label>
+        <select id="ms-modalidade"><option value="presencial">Presencial</option><option value="online">Online</option></select>
+      </div>
       <div class="fg form-full"><label>Observação</label><input id="ms-obs" placeholder="Observação sobre esta sessão..."></div>
     </div>
     <div class="modal-footer">
@@ -839,11 +863,63 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
   </div>
 </div>
 
+<!-- MODAL GOOGLE CALENDAR -->
+<div class="overlay" id="ov-calendar">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Adicionar ao Google Calendar</div>
+        <div class="modal-subtitle" id="cal-subtitle"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('ov-calendar')">✕</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:13px">
+      <div class="fg"><label>Título do evento</label><input id="cal-titulo" placeholder="Ex: Sessão — Ana Silva"></div>
+      <div class="fg"><label>Cor do evento</label>
+        <select id="cal-cor">
+          <option value="1">🔵 Azul (Lavanda)</option>
+          <option value="2">🟢 Verde (Sage)</option>
+          <option value="3">🟣 Roxo (Uva)</option>
+          <option value="4">🩷 Rosa (Flamingo)</option>
+          <option value="5">🟡 Amarelo (Banana)</option>
+          <option value="6">🟠 Laranja (Tangerine)</option>
+          <option value="7" selected>🩵 Ciano (Peacock)</option>
+          <option value="8">⚫ Cinza (Graphite)</option>
+          <option value="9">🔵 Azul (Blueberry)</option>
+          <option value="10">🟢 Verde (Basil)</option>
+          <option value="11">🔴 Vermelho (Tomato)</option>
+        </select>
+      </div>
+      <div class="fg"><label>Lembrete antes do evento</label>
+        <select id="cal-lembrete">
+          <option value="0">Sem lembrete</option>
+          <option value="10">10 minutos antes</option>
+          <option value="15" selected>15 minutos antes</option>
+          <option value="30">30 minutos antes</option>
+          <option value="60">1 hora antes</option>
+          <option value="120">2 horas antes</option>
+          <option value="1440">1 dia antes</option>
+        </select>
+      </div>
+      <div class="fg"><label>Descrição / notas do evento</label>
+        <textarea id="cal-desc" rows="3" placeholder="Informações adicionais que aparecerão no evento..."></textarea>
+      </div>
+      <div style="background:var(--teal-light);border-radius:var(--radius);padding:12px;font-size:12px;color:var(--teal-dark);line-height:1.6">
+        O evento será criado no seu Google Calendar principal. Mudanças de status (cancelado/remarcado) atualizarão o título automaticamente.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('ov-calendar')">Pular</button>
+      <button class="btn btn-primary" onclick="confirmarCriarEventoCalendar()">Criar no Calendar</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
 // ═══ CONFIG ═══
-const SCOPES='https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/userinfo.email';
+const SCOPES='https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/calendar.events';
 const FILE_NAME='psigestao_v2.json';
 let CLIENT_ID=localStorage.getItem('psigestao_cid')||'';
 
@@ -852,7 +928,8 @@ let CLIENT_ID=localStorage.getItem('psigestao_cid')||'';
 // Adicione ou remova e-mails conforme necessário.
 // Deixe o array vazio [] para liberar acesso a qualquer conta Google.
 const EMAILS_AUTORIZADOS = [
-  
+  'pamfardin@hotmail.com',
+  'jorgedelmastro15@gmail.com',
 ];
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -980,9 +1057,9 @@ function showPage(p){
   document.querySelectorAll('.nav-btn').forEach(b=>{if(b.getAttribute('onclick').includes("'"+p+"'"))b.classList.add('active')});
   if(p==='dashboard')renderDashboard();
   if(p==='pacientes')renderPacientes();
-  if(p==='agenda')renderAgenda();
+  if(p==='agenda'){renderAgenda();atualizarBotaoSync();}
   if(p==='pagamentos')renderPagamentos();
-  if(p==='configuracoes')renderConfiguracoes();
+  if(p==='configuracoes'){renderConfiguracoes();renderConfiguracaoCalendar();}
   if(p==='perfil')renderPerfil();
   if(p==='supervisao')renderSupervisao();
 }
@@ -1140,8 +1217,10 @@ function salvarEncontro(){
   const data=document.getElementById('en-data').value;
   if(!data)return alert('Informe a data.');
   if(!DB.encontros)DB.encontros=[];
-  DB.encontros.push({id:nextId(DB.encontros),supId:supAtual,data,duracao:document.getElementById('en-dur').value,modalidade:document.getElementById('en-modal').value,status:document.getElementById('en-status').value,casos:document.getElementById('en-casos').value,registro:document.getElementById('en-registro').value,tarefas:document.getElementById('en-tarefas').value});
+  const novoEncontro={id:nextId(DB.encontros),supId:supAtual,data,duracao:document.getElementById('en-dur').value,modalidade:document.getElementById('en-modal').value,status:document.getElementById('en-status').value,casos:document.getElementById('en-casos').value,registro:document.getElementById('en-registro').value,tarefas:document.getElementById('en-tarefas').value};
+  DB.encontros.push(novoEncontro);
   closeModal('ov-encontro-sup');renderAbaSvEncontros();scheduleSave();toast('Encontro registrado!');
+  setTimeout(()=>ofereceCalendarEncontro(novoEncontro),400);
 }
 function excluirEncontro(id){
   if(!confirm('Excluir este encontro?'))return;
@@ -1546,7 +1625,7 @@ function renderAbaSessoes(){
         <div class="sli-left">
           <div>
             <div style="font-weight:600;font-size:14px">${fmtData(s.data)}${s.hora?' às '+s.hora:''}</div>
-            <div style="font-size:12px;color:var(--text2)">${s.duracao?s.duracao+' min':''}${s.obs?' · '+s.obs:''}</div>
+            <div style="font-size:12px;color:var(--text2)">${s.duracao?s.duracao+' min':''}${s.modalidade?' · '+s.modalidade:''}${s.obs?' · '+s.obs:''}</div>
           </div>
         </div>
         <div class="sli-right">
@@ -1685,7 +1764,7 @@ function renderAgenda(){
     return`<div class="session-list-item">
       <div class="sli-left">
         <div class="avatar" style="width:34px;height:34px;font-size:11px">${p?initials(p.nome):'?'}</div>
-        <div><div style="font-weight:600;font-size:13px">${p?p.nome:'Paciente'}</div><div style="font-size:12px;color:var(--text2)">${fmtData(s.data)}${s.hora?' às '+s.hora:''}${s.duracao?' · '+s.duracao+'min':''}</div></div>
+        <div><div style="font-weight:600;font-size:13px">${p?p.nome:'Paciente'}</div><div style="font-size:12px;color:var(--text2)">${fmtData(s.data)}${s.hora?' às '+s.hora:''}${s.duracao?' · '+s.duracao+'min':''}${s.modalidade?' · '+s.modalidade:''}</div></div>
       </div>
       <div class="sli-right">
         <select onchange="alterarStatusSessao(${s.id},this.value)" style="padding:5px 8px;border:1.5px solid ${statusColor[s.status]||'var(--border)'};border-radius:20px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;color:${statusColor[s.status]||'var(--text2)'};background:var(--surface);cursor:pointer;outline:none">
@@ -1715,6 +1794,12 @@ function alterarStatusSessao(id,novoStatus){
   if(novoStatus==='realizado'&&statusAnterior!=='realizado'){
     gerarPagamentoSessao(DB.sessoes[i]);
   }
+  // atualizar título no Calendar se houver evento vinculado
+  if(DB.sessoes[i].calendarId&&(novoStatus==='cancelado'||novoStatus==='remarcado'||novoStatus==='falta')){
+    const pac=DB.pacientes.find(p=>p.id==DB.sessoes[i].pacienteId);
+    const prefixo={cancelado:'[CANCELADO]',remarcado:'[REMARCADO]',falta:'[FALTA]'}[novoStatus]||'';
+    atualizarEventoCalendar(DB.sessoes[i].calendarId,`${prefixo} Sessão — ${pac?pac.nome:'Paciente'}`);
+  }
 }
 
 function gerarPagamentoSessao(sessao){
@@ -1743,7 +1828,9 @@ function openModalSessao(data,pacienteId){
   const pacs=DB.pacientes.filter(p=>p.status==='ativo');
   document.getElementById('ms-pac').innerHTML='<option value="">Selecionar...</option>'+pacs.map(p=>`<option value="${p.id}"${pacienteId===p.id?' selected':''}>${p.nome}</option>`).join('');
   document.getElementById('ms-data').value=data||hoje();
-  document.getElementById('ms-hora').value='';document.getElementById('ms-status').value='agendado';document.getElementById('ms-obs').value='';
+  document.getElementById('ms-hora').value='';document.getElementById('ms-status').value='agendado';
+  document.getElementById('ms-modalidade').value='presencial';
+  document.getElementById('ms-obs').value='';
   openModal('ov-sessao');
 }
 function salvarSessao(){
@@ -1780,13 +1867,15 @@ function salvarSessao(){
   }
 
   const id=nextId(DB.sessoes);
-  const novaSessao={id,pacienteId:Number(pac),data,hora,duracao:dur,status,obs:document.getElementById('ms-obs').value};
+  const novaSessao={id,pacienteId:Number(pac),data,hora,duracao:dur,status,modalidade:document.getElementById('ms-modalidade').value,obs:document.getElementById('ms-obs').value};
   DB.sessoes.push(novaSessao);
   closeModal('ov-sessao');renderAgenda();scheduleSave();toast('Sessão agendada!');
   if(status==='realizado'){
     gerarPagamentoSessao(novaSessao);
     setTimeout(()=>abrirFormPront(id,false),300);
   }
+  // oferecer Calendar (com pequeno delay para não sobrepor modais)
+  setTimeout(()=>ofereceCalendarSessao(novaSessao),400);
 }
 
 // abre o prontuário do paciente na aba sessões, destacando a sessão
@@ -1980,7 +2069,7 @@ function exportarPDFFicha(){
         const statusCor={realizado:'#1a9070',agendado:'#1a5fa0',falta:'#c94f2a',cancelado:'#888',remarcado:'#b07010'};
         return`<div style="border:1px solid #ddd;border-radius:8px;margin-bottom:10px;overflow:hidden">
           <div style="background:#f5f5f5;padding:10px 14px;display:flex;justify-content:space-between;align-items:center">
-            <div style="font-weight:bold;font-size:13px">${fmtData(s.data)}${s.hora?' às '+s.hora:''}${s.duracao?' · '+s.duracao+' min':''}</div>
+            <div style="font-weight:bold;font-size:13px">${fmtData(s.data)}${s.hora?' às '+s.hora:''}${s.duracao?' · '+s.duracao+' min':''}${s.modalidade?' · '+s.modalidade:''}</div>
             <span style="font-size:11px;font-weight:bold;color:${statusCor[s.status]||'#888'}">${s.status.toUpperCase()}</span>
           </div>
           ${pr?`<div style="padding:12px 14px;font-size:12px;line-height:1.8">
@@ -2070,6 +2159,192 @@ function imprimirPDF(){
   w.document.close();
   w.focus();
   setTimeout(()=>w.print(),500);
+}
+
+// ═══ GOOGLE CALENDAR ═══
+let calEventoPendente=null; // guarda dados do evento aguardando confirmação
+
+function calAtivo(){return localStorage.getItem('psigestao_cal')==='1';}
+
+function salvarConfigCalendar(){
+  const ativo=document.getElementById('cfg-cal-ativo').checked;
+  localStorage.setItem('psigestao_cal',ativo?'1':'0');
+  document.getElementById('cfg-cal-label').textContent=ativo?'Ativado':'Desativado';
+  atualizarBotaoSync();
+}
+
+function atualizarBotaoSync(){
+  const btn=document.getElementById('btn-sync-cal');
+  if(btn)btn.style.display=calAtivo()?'':'none';
+}
+
+async function sincronizarCalendar(){
+  const tok=gapi.auth.getToken()?.access_token;
+  if(!tok){toast('Erro: faça login novamente.');return;}
+  const btn=document.getElementById('btn-sync-cal');
+  btn.textContent='⏳ Sincronizando...';btn.disabled=true;
+
+  // coletar todos os calendarIds vinculados a sessões
+  const sessoesCal=DB.sessoes.filter(s=>s.calendarId);
+  const encontrosCal=(DB.encontros||[]).filter(e=>e.calendarId);
+  if(!sessoesCal.length&&!encontrosCal.length){
+    btn.textContent='&#8635; Sincronizar Calendar';btn.disabled=false;
+    toast('Nenhum evento vinculado ao Calendar ainda.');return;
+  }
+
+  let atualizados=0;
+  const statusMap={'CANCELLED':'cancelado'};
+
+  // sincronizar sessões
+  for(const s of sessoesCal){
+    try{
+      const r=await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${s.calendarId}`,{headers:{'Authorization':'Bearer '+tok}});
+      if(!r.ok)continue;
+      const ev=await r.json();
+      const i=DB.sessoes.findIndex(x=>x.id===s.id);
+      if(i<0)continue;
+      let mudou=false;
+      // status cancelado no Calendar
+      if(ev.status==='cancelled'&&DB.sessoes[i].status!=='cancelado'){
+        DB.sessoes[i].status='cancelado';mudou=true;
+      }
+      // horário alterado no Calendar
+      if(ev.start?.dateTime){
+        const novaHora=ev.start.dateTime.slice(11,16);
+        const novaData=ev.start.dateTime.slice(0,10);
+        if(novaHora!==DB.sessoes[i].hora){DB.sessoes[i].hora=novaHora;mudou=true;}
+        if(novaData!==DB.sessoes[i].data){DB.sessoes[i].data=novaData;mudou=true;}
+      }
+      if(ev.end?.dateTime&&ev.start?.dateTime){
+        const diffMin=Math.round((new Date(ev.end.dateTime)-new Date(ev.start.dateTime))/60000);
+        if(diffMin>0&&String(diffMin)!==String(DB.sessoes[i].duracao)){DB.sessoes[i].duracao=diffMin;mudou=true;}
+      }
+      if(mudou)atualizados++;
+    }catch(e){console.warn('Erro ao buscar evento',s.calendarId,e)}
+  }
+
+  // sincronizar encontros de supervisão
+  for(const e of encontrosCal){
+    try{
+      const r=await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${e.calendarId}`,{headers:{'Authorization':'Bearer '+tok}});
+      if(!r.ok)continue;
+      const ev=await r.json();
+      const i=(DB.encontros||[]).findIndex(x=>x.id===e.id);
+      if(i<0)continue;
+      let mudou=false;
+      if(ev.status==='cancelled'&&DB.encontros[i].status!=='cancelado'){
+        DB.encontros[i].status='cancelado';mudou=true;
+      }
+      if(ev.start?.date&&ev.start.date!==DB.encontros[i].data){
+        DB.encontros[i].data=ev.start.date;mudou=true;
+      }
+      if(mudou)atualizados++;
+    }catch(e){console.warn('Erro ao buscar encontro',e)}
+  }
+
+  if(atualizados>0){scheduleSave();renderAgenda();renderDashboard();}
+  btn.textContent='&#8635; Sincronizar Calendar';btn.disabled=false;
+  toast(atualizados>0?`${atualizados} evento(s) atualizado(s) do Calendar!`:'Tudo já está atualizado.');
+}
+
+function renderConfiguracaoCalendar(){
+  const el=document.getElementById('cfg-cal-ativo');
+  if(!el)return;
+  const ativo=calAtivo();
+  el.checked=ativo;
+  document.getElementById('cfg-cal-label').textContent=ativo?'Ativado':'Desativado';
+}
+
+// abre modal de configuração do evento antes de criar
+function abrirModalCalendar(titulo,data,hora,duracao,descricao,onConfirm){
+  calEventoPendente=onConfirm;
+  document.getElementById('cal-titulo').value=titulo;
+  document.getElementById('cal-subtitle').textContent=`${fmtData(data)}${hora?' às '+hora:''}`;
+  document.getElementById('cal-desc').value=descricao||'';
+  document.getElementById('cal-cor').value='7';
+  document.getElementById('cal-lembrete').value='15';
+  openModal('ov-calendar');
+}
+
+async function confirmarCriarEventoCalendar(){
+  closeModal('ov-calendar');
+  if(!calEventoPendente)return;
+  const titulo=document.getElementById('cal-titulo').value;
+  const cor=document.getElementById('cal-cor').value;
+  const lembrete=Number(document.getElementById('cal-lembrete').value);
+  const desc=document.getElementById('cal-desc').value;
+  await calEventoPendente(titulo,cor,lembrete,desc);
+  calEventoPendente=null;
+}
+
+async function criarEventoCalendar({titulo,data,hora,duracao,cor,lembrete,desc}){
+  const tok=gapi.auth.getToken()?.access_token;
+  if(!tok){toast('Erro: não autenticado');return null;}
+  const tz=Intl.DateTimeFormat().resolvedOptions().timeZone;
+  let start,end;
+  if(hora){
+    start={dateTime:`${data}T${hora}:00`,timeZone:tz};
+    const[h,m]=hora.split(':').map(Number);
+    const fim=new Date(0,0,0,h,m+(Number(duracao)||50));
+    const fimStr=`${String(fim.getHours()).padStart(2,'0')}:${String(fim.getMinutes()).padStart(2,'0')}`;
+    end={dateTime:`${data}T${fimStr}:00`,timeZone:tz};
+  }else{
+    start={date:data};end={date:data};
+  }
+  const body={summary:titulo,description:desc,colorId:cor,start,end,reminders:lembrete>0?{useDefault:false,overrides:[{method:'popup',minutes:lembrete}]}:{useDefault:false,overrides:[]}};
+  try{
+    const r=await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events',{method:'POST',headers:{'Authorization':'Bearer '+tok,'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const ev=await r.json();
+    if(ev.id){toast('Evento criado no Google Calendar!');return ev.id;}
+    toast('Erro ao criar evento no Calendar');return null;
+  }catch(e){toast('Erro ao criar evento');console.error(e);return null;}
+}
+
+async function atualizarEventoCalendar(calId,titulo){
+  const tok=gapi.auth.getToken()?.access_token;
+  if(!tok||!calId)return;
+  try{
+    await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${calId}`,{method:'PATCH',headers:{'Authorization':'Bearer '+tok,'Content-Type':'application/json'},body:JSON.stringify({summary:titulo})});
+    toast('Evento atualizado no Calendar!');
+  }catch(e){console.error(e)}
+}
+
+async function excluirEventoCalendar(calId){
+  const tok=gapi.auth.getToken()?.access_token;
+  if(!tok||!calId)return;
+  try{
+    await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${calId}`,{method:'DELETE',headers:{'Authorization':'Bearer '+tok}});
+  }catch(e){console.error(e)}
+}
+
+// ── integração sessões ──
+function ofereceCalendarSessao(sessao){
+  if(!calAtivo())return;
+  const pac=DB.pacientes.find(p=>p.id==sessao.pacienteId);
+  const titulo=`Sessão — ${pac?pac.nome:'Paciente'}`;
+  const desc=`${sessao.modalidade||''}${sessao.obs?'\n'+sessao.obs:''}`;
+  abrirModalCalendar(titulo,sessao.data,sessao.hora,sessao.duracao,desc,async(t,cor,lembrete,d)=>{
+    const calId=await criarEventoCalendar({titulo:t,data:sessao.data,hora:sessao.hora,duracao:sessao.duracao,cor,lembrete,desc:d});
+    if(calId){
+      const i=DB.sessoes.findIndex(s=>s.id===sessao.id);
+      if(i>=0){DB.sessoes[i].calendarId=calId;scheduleSave();}
+    }
+  });
+}
+
+// ── integração encontros de supervisão ──
+function ofereceCalendarEncontro(encontro){
+  if(!calAtivo())return;
+  const sv=(DB.supervisionandas||[]).find(x=>x.id===encontro.supId);
+  const titulo=`Supervisão — ${sv?sv.nome:'Supervisionanda'}`;
+  const desc=encontro.casos?`Casos: ${encontro.casos}`:'';
+  abrirModalCalendar(titulo,encontro.data,null,encontro.duracao,desc,async(t,cor,lembrete,d)=>{
+    const calId=await criarEventoCalendar({titulo:t,data:encontro.data,hora:null,duracao:encontro.duracao,cor,lembrete,desc:d});
+    if(calId){
+      const i=(DB.encontros||[]).findIndex(e=>e.id===encontro.id);
+      if(i>=0){DB.encontros[i].calendarId=calId;scheduleSave();}
+    }
+  });
 }
 
 // ═══ INIT ═══
