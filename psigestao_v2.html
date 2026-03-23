@@ -333,7 +333,10 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
   <div class="login-card">
     <div id="login-auto" style="text-align:center;padding:16px 0;display:none">
       <div style="font-size:13px;color:var(--text2);margin-bottom:8px">Entrando automaticamente...</div>
-      <div style="width:32px;height:32px;border:3px solid var(--brand-light);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto"></div>
+      <div style="width:32px;height:32px;border:3px solid var(--brand-light);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px"></div>
+      <button class="btn-google" onclick="localStorage.removeItem('psigestao_hint');document.getElementById('login-auto').style.display='none';document.getElementById('login-manual').style.display='block'" style="font-size:12px;padding:8px 16px;color:var(--text2);margin-top:4px">
+        Usar outra conta
+      </button>
     </div>
     <div id="login-manual">
       <button class="btn-google" id="btn-signin">
@@ -1407,9 +1410,13 @@ function initGoogle(){
 
     const onToken=async r=>{
       if(r.error){
-        // falha silenciosa — mostrar botão de login manual
+        // falha no login silencioso ou manual — mostrar botão de login
         document.getElementById('login-auto').style.display='none';
         document.getElementById('login-manual').style.display='block';
+        // limpar hint inválido para não tentar novamente
+        if(r.error==='interaction_required'||r.error==='access_denied'||r.error==='invalid_grant'){
+          localStorage.removeItem('psigestao_hint');
+        }
         return;
       }
       // guardar e-mail para renovações futuras
@@ -1443,6 +1450,13 @@ function initGoogle(){
     if(hint){
       document.getElementById('login-auto').style.display='block';
       document.getElementById('login-manual').style.display='none';
+      // timeout de segurança: se em 6s o login silencioso não retornar, mostra botão manual
+      const fallbackTimer=setTimeout(()=>{
+        document.getElementById('login-auto').style.display='none';
+        document.getElementById('login-manual').style.display='block';
+      },6000);
+      const _orig=tokenClient.callback;
+      tokenClient.callback=async r=>{clearTimeout(fallbackTimer);await _orig(r);};
       tokenClient.requestAccessToken({prompt:'',login_hint:hint});
     }else{
       document.getElementById('login-auto').style.display='none';
