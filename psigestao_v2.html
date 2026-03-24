@@ -1453,9 +1453,9 @@ function mostrarDiagnostico(erro){
 }
 
 // ═══ GOOGLE DRIVE ═══
-function initGoogle(){
+async function initGoogle(){
   // preencher diagnóstico sempre que a tela de login estiver visível
-  setTimeout(mostrarDiagnostico, 200);
+  setTimeout(mostrarDiagnostico, 300);
   if(!CLIENT_ID){
     document.getElementById('btn-signin').onclick=()=>{
       document.getElementById('login-screen').style.display='none';
@@ -1463,8 +1463,14 @@ function initGoogle(){
       showConfigBanner();renderDashboard();
     };return;
   }
-  gapi.load('client',async()=>{
+  try{
+    await new Promise((res,rej)=>gapi.load('client',{callback:res,onerror:rej}));
     await gapi.client.init({discoveryDocs:['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest']});
+  }catch(e){
+    console.error('Erro ao inicializar gapi:',e);
+    mostrarDiagnostico('gapi_init_error');
+    return;
+  }
 
     const onToken=async r=>{
       if(r.error){
@@ -1523,7 +1529,6 @@ function initGoogle(){
     }
 
     document.getElementById('btn-signin').onclick=()=>tokenClient.requestAccessToken({prompt:'select_account'});
-  });
 }
 
 function renovarToken(){
@@ -4150,7 +4155,13 @@ function ofereceCalendarEncontro(encontro){
 // ═══ INIT ═══
 window.addEventListener('load',()=>{
   carregarPersonalizacao();
-  const tryInit=()=>{if(typeof gapi!=='undefined'&&typeof google!=='undefined'){gapi.load('client',()=>initGoogle())}else{setTimeout(tryInit,500)}};
+  const tryInit=()=>{
+    if(typeof gapi!=='undefined'&&typeof google!=='undefined'){
+      initGoogle();
+    }else{
+      setTimeout(tryInit,300);
+    }
+  };
   tryInit();
 });
 </script>
