@@ -3333,7 +3333,7 @@ function abrirPainelDia(ds){
     ? sess.map(s=>{
         const p=DB.pacientes.find(x=>x.id==s.pacienteId);
         const pr=DB.prontuarios.find(x=>x.sessaoId===s.id);
-        return`<div style="background:var(--surface2);border-radius:var(--radius-lg);padding:14px;margin-bottom:10px;border-left:4px solid ${statusColor[s.status]||'var(--border)'}">
+        return`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px;margin-bottom:10px;border-left:4px solid ${statusColor[s.status]||'var(--border)'}">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
             <div style="display:flex;align-items:center;gap:10px">
               <div class="avatar" style="width:36px;height:36px;font-size:12px;flex-shrink:0">${p?initials(p.nome):'?'}</div>
