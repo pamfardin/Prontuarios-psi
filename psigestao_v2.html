@@ -3427,8 +3427,6 @@ function salvarEdicaoSessao(){
   setTimeout(()=>abrirPainelDia(ds), 150);
 }
 
-if(mesAtual>11){mesAtual=0;anoAtual++}if(mesAtual<0){mesAtual=11;anoAtual--}renderAgenda()}
-
 function mudarMes(d){mesAtual+=d;if(mesAtual>11){mesAtual=0;anoAtual++}if(mesAtual<0){mesAtual=11;anoAtual--}renderAgenda()}
 
 function alterarStatusSessao(id,novoStatus){
