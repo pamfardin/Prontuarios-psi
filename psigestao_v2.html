@@ -409,6 +409,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
       <button class="nav-btn" onclick="showPage('agenda')">Agenda</button>
       <button class="nav-btn" onclick="showPage('pagamentos')">Pagamentos</button>
       <button class="nav-btn" onclick="showPage('supervisao')">Supervisão</button>
+      <button class="nav-btn" onclick="showPage('nr01')">NR01</button>
       <button class="nav-btn" onclick="showPage('perfil')">Perfil</button>
       <button class="nav-btn" onclick="showPage('configuracoes')">Configurações</button>
     </nav>
@@ -516,6 +517,15 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
       </div>
     </div>
 
+
+    <!-- NR01 -->
+    <div class="page" id="page-nr01">
+      <div class="section-header">
+        <div class="page-title" style="margin-bottom:0">Consultoria NR01</div>
+        <button class="btn btn-primary" onclick="openModalNR01Empresa()">+ Nova empresa</button>
+      </div>
+      <div id="nr01-lista"></div>
+    </div>
 
     <!-- SUPERVISÃO -->
     <div class="page" id="page-supervisao">
@@ -849,6 +859,68 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
       <button class="btn btn-secondary" onclick="closeModal('ov-pag-sup')">Cancelar</button>
       <button class="btn btn-primary" onclick="salvarPagSup()">Salvar</button>
     </div>
+  </div>
+</div>
+
+<!-- MODAL NR01 EMPRESA -->
+<div class="overlay" id="ov-nr01-empresa">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-header">
+      <div><div class="modal-title" id="nr01emp-titulo">Nova empresa</div></div>
+      <button class="modal-close" onclick="closeModal('ov-nr01-empresa')">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="fg form-full"><label>Nome da empresa *</label><input id="nr01-nome" placeholder="Razão social ou nome fantasia"></div>
+      <div class="fg"><label>CNPJ</label><input id="nr01-cnpj" placeholder="00.000.000/0000-00" maxlength="18" oninput="mascaraCNPJ(this)"></div>
+      <div class="fg"><label>Setor / Ramo de atividade</label><input id="nr01-setor" placeholder="Ex: Comércio, Indústria, Saúde..."></div>
+      <div class="fg"><label>Responsável na empresa</label><input id="nr01-responsavel" placeholder="Nome do contato"></div>
+      <div class="fg"><label>Telefone / WhatsApp</label><input id="nr01-tel" placeholder="(00) 00000-0000"></div>
+      <div class="fg"><label>Nº de funcionários</label><input id="nr01-nfunc" type="number" min="1" placeholder="Ex: 45"></div>
+      <div class="fg"><label>Data de início do projeto</label><input id="nr01-inicio" type="date"></div>
+      <div class="fg"><label>Previsão de entrega</label><input id="nr01-entrega" type="date"></div>
+      <div class="fg form-full"><label>Status do projeto</label>
+        <select id="nr01-status">
+          <option value="coleta">🔍 Coleta de dados</option>
+          <option value="analise">📊 Em análise</option>
+          <option value="relatorio">📝 Elaborando relatório</option>
+          <option value="revisao">🔄 Em revisão</option>
+          <option value="entregue">✅ Entregue</option>
+          <option value="arquivado">📁 Arquivado</option>
+        </select>
+      </div>
+      <div class="fg form-full"><label>Observações gerais</label><textarea id="nr01-obs" placeholder="Informações relevantes sobre a empresa, contexto do projeto..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('ov-nr01-empresa')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarNR01Empresa()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NR01 FICHA COMPLETA -->
+<div class="overlay" id="ov-nr01-ficha">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="nr01-ficha-titulo">Ficha da empresa</div>
+        <div class="modal-subtitle" id="nr01-ficha-sub"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('ov-nr01-ficha')">✕</button>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="abaTabNR01('geral',this)">📋 Geral</button>
+      <button class="tab" onclick="abaTabNR01('checklist',this)">✅ Checklist</button>
+      <button class="tab" onclick="abaTabNR01('riscos',this)">⚠️ Riscos</button>
+      <button class="tab" onclick="abaTabNR01('entrevistas',this)">🗣️ Entrevistas</button>
+      <button class="tab" onclick="abaTabNR01('documentos',this)">📎 Documentos</button>
+      <button class="tab" onclick="abaTabNR01('plano',this)">🎯 Plano de ação</button>
+    </div>
+    <div id="nr01-aba-geral"></div>
+    <div id="nr01-aba-checklist" style="display:none"></div>
+    <div id="nr01-aba-riscos" style="display:none"></div>
+    <div id="nr01-aba-entrevistas" style="display:none"></div>
+    <div id="nr01-aba-documentos" style="display:none"></div>
+    <div id="nr01-aba-plano" style="display:none"></div>
   </div>
 </div>
 
@@ -1408,7 +1480,7 @@ const EMAILS_AUTORIZADOS = [
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 let tokenClient,driveFileId=null,saveTimer=null;
-let DB={pacientes:[],sessoes:[],prontuarios:[],pagamentos:[],configuracoes:{},perfil:{},supervisionandas:[],encontros:[],pagamentosSup:[],listaEspera:[],anamneses:[],despesas:[],sublocacoes:[],recebSubLoc:[],arquivos:[]};
+let DB={pacientes:[],sessoes:[],prontuarios:[],pagamentos:[],configuracoes:{},perfil:{},supervisionandas:[],encontros:[],pagamentosSup:[],listaEspera:[],anamneses:[],despesas:[],sublocacoes:[],recebSubLoc:[],arquivos:[],nr01Empresas:[],nr01Dados:[]};
 let pacAtual=null,sessAtual=null;
 let mesAtual=new Date().getMonth(),anoAtual=new Date().getFullYear();
 let filtroStatus='todos';
@@ -1556,6 +1628,8 @@ async function loadData(){
       DB.sublocacoes=DB.sublocacoes||[];
       DB.recebSubLoc=DB.recebSubLoc||[];
       DB.arquivos=DB.arquivos||[];
+      DB.nr01Empresas=DB.nr01Empresas||[];
+      DB.nr01Dados=DB.nr01Dados||[];
     }
   }catch(e){console.warn(e)}
 }
@@ -1620,6 +1694,7 @@ function showPage(p){
   if(p==='configuracoes'){renderConfiguracoes();renderConfiguracaoCalendar();renderPersonalizacao();}
   if(p==='perfil')renderPerfil();
   if(p==='supervisao')renderSupervisao();
+  if(p==='nr01')renderNR01();
 }
 function openModal(id){document.getElementById(id).classList.add('open')}
 function closeModal(id){document.getElementById(id).classList.remove('open')}
@@ -2054,6 +2129,660 @@ function renderDashboard(){
       <div><div style="font-weight:600;font-size:13px">${p?p.nome:'Paciente'}</div><div style="font-size:12px;color:var(--text2)">${pg.descricao||''}${pg.vencimento?' · '+fmtData(pg.vencimento):''}</div></div>
       <div class="pay-right"><span class="badge ${pg.status==='atrasado'?'b-late':'b-pending'}">${pg.status}</span><span style="font-weight:600">${fmtMoeda(pg.valor)}</span></div>
     </div>`}).join(''):'<div class="empty"><p>Nenhum pagamento pendente</p></div>';
+}
+
+// ═══ NR01 — CONSULTORIA ═══
+
+const NR01_STATUS={
+  coleta:{label:'Coleta de dados',cor:'var(--blue)',bg:'var(--blue-light)'},
+  analise:{label:'Em análise',cor:'var(--amber)',bg:'var(--amber-light)'},
+  relatorio:{label:'Elaborando relatório',cor:'var(--purple)',bg:'var(--purple-light)'},
+  revisao:{label:'Em revisão',cor:'#e07020',bg:'#fff3e0'},
+  entregue:{label:'Entregue',cor:'var(--brand-dark)',bg:'var(--teal-light)'},
+  arquivado:{label:'Arquivado',cor:'var(--text3)',bg:'var(--surface2)'},
+};
+
+const NR01_CHECKLIST=[
+  {grupo:'1. Identificação e Escopo',itens:[
+    'Identificação da organização (razão social, CNPJ, endereço)',
+    'Definição do escopo do GRO/PGR',
+    'Identificação dos processos produtivos e atividades',
+    'Levantamento do número de trabalhadores expostos',
+    'Identificação de trabalhadores terceirizados e temporários',
+  ]},
+  {grupo:'2. Inventário de Riscos',itens:[
+    'Identificação de perigos físicos (ruído, calor, vibração, radiação)',
+    'Identificação de perigos químicos (produtos, poeiras, vapores)',
+    'Identificação de perigos biológicos (vírus, bactérias, fungos)',
+    'Identificação de perigos ergonômicos (postura, esforço, repetitividade)',
+    'Identificação de perigos de acidentes (máquinas, eletricidade, quedas)',
+    'Identificação de perigos psicossociais (estresse, assédio, violência)',
+  ]},
+  {grupo:'3. Avaliação e Classificação',itens:[
+    'Avaliação da probabilidade de ocorrência de cada perigo',
+    'Avaliação da severidade dos danos potenciais',
+    'Classificação dos riscos (aceitável, tolerável, intolerável)',
+    'Priorização dos riscos para controle',
+    'Verificação de conformidade com NRs específicas',
+  ]},
+  {grupo:'4. Medidas de Controle',itens:[
+    'Medidas de eliminação do perigo',
+    'Medidas de substituição do agente de risco',
+    'Controles de engenharia (enclausuramento, ventilação, etc.)',
+    'Medidas administrativas (procedimentos, treinamentos)',
+    'Equipamentos de Proteção Individual (EPIs) adequados',
+    'Verificação da eficácia das medidas existentes',
+  ]},
+  {grupo:'5. Monitoramento e Revisão',itens:[
+    'Definição de indicadores de desempenho',
+    'Cronograma de revisão periódica do PGR',
+    'Registro de acidentes e incidentes',
+    'Programa de treinamento e capacitação',
+    'Comunicação dos riscos aos trabalhadores',
+  ]},
+  {grupo:'6. Documentação',itens:[
+    'PGR elaborado e assinado por profissional habilitado',
+    'Inventário de riscos documentado',
+    'Plano de ação com responsáveis e prazos',
+    'Registros de treinamentos realizados',
+    'PCMSO integrado ao GRO',
+    'Documentação acessível aos trabalhadores',
+  ]},
+];
+
+function mascaraCNPJ(el){
+  let v=el.value.replace(/\D/g,'').slice(0,14);
+  v=v.replace(/^(\d{2})(\d)/,'$1.$2');
+  v=v.replace(/^(\d{2})\.(\d{3})(\d)/,'$1.$2.$3');
+  v=v.replace(/\.(\d{3})(\d)/,'.$1/$2');
+  v=v.replace(/(\d{4})(\d)/,'$1-$2');
+  el.value=v;
+}
+
+let nr01AtualId=null;
+let editandoNR01Id=null;
+
+function renderNR01(){
+  if(!DB.nr01Empresas) DB.nr01Empresas=[];
+  const el=document.getElementById('nr01-lista');
+  if(!DB.nr01Empresas.length){
+    el.innerHTML='<div class="empty"><p>Nenhuma empresa cadastrada ainda.<br>Clique em "+ Nova empresa" para começar.</p></div>';
+    return;
+  }
+  // Agrupar por status
+  const grupos={coleta:[],analise:[],relatorio:[],revisao:[],entregue:[],arquivado:[]};
+  DB.nr01Empresas.forEach(e=>{ if(grupos[e.status]) grupos[e.status].push(e); else grupos.coleta.push(e); });
+  const ordem=['coleta','analise','relatorio','revisao','entregue','arquivado'];
+  el.innerHTML=ordem.filter(k=>grupos[k].length).map(k=>{
+    const st=NR01_STATUS[k];
+    return`<div style="margin-bottom:20px">
+      <div style="font-size:11px;font-weight:700;color:${st.cor};text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">${st.label} (${grupos[k].length})</div>
+      ${grupos[k].map(emp=>{
+        const check=calcChecklist(emp.id);
+        const pct=check.total?Math.round(check.ok/check.total*100):0;
+        const tel=(emp.tel||'').replace(/\D/g,'');
+        const wpp=tel?`<a href="https://wa.me/${tel.startsWith('55')?tel:'55'+tel}" target="_blank" onclick="event.stopPropagation()" style="color:#25D366;font-size:11px;margin-left:6px">WhatsApp</a>`:'';
+        return`<div class="patient-card" onclick="abrirFichaNR01(${emp.id})">
+          <div class="pi">
+            <div class="avatar" style="background:${st.bg};color:${st.cor};font-size:12px;border:2px solid ${st.cor}33">${(emp.nome||'?').slice(0,2).toUpperCase()}</div>
+            <div>
+              <div class="p-name">${emp.nome} <span class="badge" style="background:${st.bg};color:${st.cor}">${st.label}</span></div>
+              <div class="p-meta">${emp.setor||''}${emp.setor&&emp.cnpj?' · ':''}${emp.cnpj||''}${emp.nfunc?' · '+emp.nfunc+' func.':''}</div>
+              <div class="p-meta">${emp.responsavel||''}${emp.tel?' · '+emp.tel:''}${wpp}</div>
+              ${check.total?`<div style="margin-top:6px;display:flex;align-items:center;gap:8px">
+                <div style="flex:1;height:5px;background:var(--border);border-radius:10px;max-width:140px">
+                  <div style="height:5px;background:${pct>=80?'var(--brand)':pct>=40?'var(--amber)':'var(--coral)'};border-radius:10px;width:${pct}%"></div>
+                </div>
+                <span style="font-size:11px;color:var(--text2)">Checklist ${pct}%</span>
+              </div>`:''}
+            </div>
+          </div>
+          <div class="p-actions">
+            ${emp.entrega?`<span style="font-size:11px;color:var(--text2)">Entrega: ${fmtData(emp.entrega)}</span>`:''}
+            <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();editarNR01Empresa(${emp.id})">Editar</button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }).join('');
+}
+
+function calcChecklist(empId){
+  const dados=(DB.nr01Dados||[]).find(x=>x.empId===empId);
+  if(!dados||!dados.checklist) return {ok:0,total:0};
+  const total=NR01_CHECKLIST.reduce((a,g)=>a+g.itens.length,0);
+  const ok=Object.values(dados.checklist).filter(Boolean).length;
+  return {ok,total};
+}
+
+function openModalNR01Empresa(){
+  editandoNR01Id=null;
+  document.getElementById('nr01emp-titulo').textContent='Nova empresa';
+  ['nr01-nome','nr01-cnpj','nr01-setor','nr01-responsavel','nr01-tel','nr01-obs'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('nr01-nfunc').value='';
+  document.getElementById('nr01-inicio').value=hoje();
+  document.getElementById('nr01-entrega').value='';
+  document.getElementById('nr01-status').value='coleta';
+  openModal('ov-nr01-empresa');
+}
+
+function editarNR01Empresa(id){
+  const e=(DB.nr01Empresas||[]).find(x=>x.id===id);
+  if(!e) return;
+  editandoNR01Id=id;
+  document.getElementById('nr01emp-titulo').textContent='Editar empresa';
+  document.getElementById('nr01-nome').value=e.nome||'';
+  document.getElementById('nr01-cnpj').value=e.cnpj||'';
+  document.getElementById('nr01-setor').value=e.setor||'';
+  document.getElementById('nr01-responsavel').value=e.responsavel||'';
+  document.getElementById('nr01-tel').value=e.tel||'';
+  document.getElementById('nr01-nfunc').value=e.nfunc||'';
+  document.getElementById('nr01-inicio').value=e.inicio||'';
+  document.getElementById('nr01-entrega').value=e.entrega||'';
+  document.getElementById('nr01-status').value=e.status||'coleta';
+  document.getElementById('nr01-obs').value=e.obs||'';
+  openModal('ov-nr01-empresa');
+}
+
+function salvarNR01Empresa(){
+  const nome=document.getElementById('nr01-nome').value.trim();
+  if(!nome) return alert('Informe o nome da empresa.');
+  if(!DB.nr01Empresas) DB.nr01Empresas=[];
+  const obj={nome,cnpj:document.getElementById('nr01-cnpj').value,setor:document.getElementById('nr01-setor').value,responsavel:document.getElementById('nr01-responsavel').value,tel:document.getElementById('nr01-tel').value,nfunc:document.getElementById('nr01-nfunc').value,inicio:document.getElementById('nr01-inicio').value,entrega:document.getElementById('nr01-entrega').value,status:document.getElementById('nr01-status').value,obs:document.getElementById('nr01-obs').value};
+  if(editandoNR01Id){
+    const i=DB.nr01Empresas.findIndex(x=>x.id===editandoNR01Id);
+    if(i>=0) DB.nr01Empresas[i]={...DB.nr01Empresas[i],...obj};
+  }else{
+    obj.id=nextId(DB.nr01Empresas);
+    obj.criadoEm=hoje();
+    DB.nr01Empresas.push(obj);
+  }
+  closeModal('ov-nr01-empresa');
+  renderNR01();scheduleSave();toast('Empresa salva!');
+}
+
+function abrirFichaNR01(id){
+  const e=(DB.nr01Empresas||[]).find(x=>x.id===id);
+  if(!e) return;
+  nr01AtualId=id;
+  document.getElementById('nr01-ficha-titulo').textContent=e.nome;
+  const st=NR01_STATUS[e.status]||NR01_STATUS.coleta;
+  document.getElementById('nr01-ficha-sub').innerHTML=`<span style="color:${st.cor}">${st.label}</span>${e.setor?' · '+e.setor:''}`;
+  // Ativar primeira aba
+  document.querySelectorAll('#ov-nr01-ficha .tab').forEach((b,i)=>{b.className='tab'+(i===0?' active':'')});
+  ['geral','checklist','riscos','entrevistas','documentos','plano'].forEach((a,i)=>{
+    document.getElementById('nr01-aba-'+a).style.display=i===0?'block':'none';
+  });
+  renderNR01AbaGeral();
+  openModal('ov-nr01-ficha');
+}
+
+function abaTabNR01(nome, btn){
+  document.querySelectorAll('#ov-nr01-ficha .tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  ['geral','checklist','riscos','entrevistas','documentos','plano'].forEach(a=>{
+    document.getElementById('nr01-aba-'+a).style.display=a===nome?'block':'none';
+  });
+  if(nome==='geral') renderNR01AbaGeral();
+  if(nome==='checklist') renderNR01AbaChecklist();
+  if(nome==='riscos') renderNR01AbaRiscos();
+  if(nome==='entrevistas') renderNR01AbaEntrevistas();
+  if(nome==='documentos') renderNR01AbaDocumentos();
+  if(nome==='plano') renderNR01AbaPlano();
+}
+
+function getNR01Dados(empId){
+  if(!DB.nr01Dados) DB.nr01Dados=[];
+  let d=DB.nr01Dados.find(x=>x.empId===empId);
+  if(!d){d={empId,checklist:{},riscos:[],entrevistas:[],plano:[]};DB.nr01Dados.push(d);}
+  return d;
+}
+
+function salvarNR01Dados(){scheduleSave();}
+
+// ── Aba Geral ──
+function renderNR01AbaGeral(){
+  const e=(DB.nr01Empresas||[]).find(x=>x.id===nr01AtualId);
+  if(!e) return;
+  const el=document.getElementById('nr01-aba-geral');
+  el.innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <div><div class="stat-label">CNPJ</div><div>${e.cnpj||'—'}</div></div>
+      <div><div class="stat-label">Setor / Ramo</div><div>${e.setor||'—'}</div></div>
+      <div><div class="stat-label">Responsável</div><div>${e.responsavel||'—'}</div></div>
+      <div><div class="stat-label">Telefone</div><div>${e.tel||'—'}</div></div>
+      <div><div class="stat-label">Nº de funcionários</div><div>${e.nfunc||'—'}</div></div>
+      <div><div class="stat-label">Status</div><div>${NR01_STATUS[e.status]?.label||'—'}</div></div>
+      <div><div class="stat-label">Início do projeto</div><div>${e.inicio?fmtData(e.inicio):'—'}</div></div>
+      <div><div class="stat-label">Previsão de entrega</div><div>${e.entrega?fmtData(e.entrega):'—'}</div></div>
+    </div>
+    <div class="pront-section">
+      <div class="pront-section-title">Observações gerais</div>
+      <textarea id="nr01-obs-edit" style="width:100%;min-height:120px;padding:10px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:'Nunito',sans-serif;font-size:13px;line-height:1.6;resize:vertical;background:var(--surface);outline:none" placeholder="Contexto da empresa, histórico, informações relevantes para o projeto...">${e.obs||''}</textarea>
+      <div style="margin-top:8px;display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn btn-primary btn-sm" onclick="salvarObsNR01()">Salvar observações</button>
+        <button class="btn btn-ghost btn-sm" onclick="editarNR01Empresa(${e.id});closeModal('ov-nr01-ficha')">Editar dados cadastrais</button>
+      </div>
+    </div>`;
+}
+
+function salvarObsNR01(){
+  const e=(DB.nr01Empresas||[]).find(x=>x.id===nr01AtualId);
+  if(!e) return;
+  e.obs=document.getElementById('nr01-obs-edit').value;
+  scheduleSave();toast('Observações salvas!');
+}
+
+// ── Aba Checklist ──
+function renderNR01AbaChecklist(){
+  const dados=getNR01Dados(nr01AtualId);
+  const check=calcChecklist(nr01AtualId);
+  const pct=check.total?Math.round(check.ok/check.total*100):0;
+  const el=document.getElementById('nr01-aba-checklist');
+  el.innerHTML=`
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;padding:14px;background:var(--surface2);border-radius:var(--radius-lg)">
+      <div style="flex:1">
+        <div style="font-weight:600;font-size:13px;margin-bottom:6px">Progresso do checklist: ${check.ok} / ${check.total} itens (${pct}%)</div>
+        <div style="height:8px;background:var(--border);border-radius:10px">
+          <div style="height:8px;background:${pct>=80?'var(--brand)':pct>=40?'var(--amber)':'var(--coral)'};border-radius:10px;width:${pct}%;transition:width .3s"></div>
+        </div>
+      </div>
+    </div>
+    ${NR01_CHECKLIST.map((grupo,gi)=>`
+      <div class="card" style="margin-bottom:12px;padding:16px">
+        <div style="font-weight:700;font-size:13px;color:var(--brand-dark);margin-bottom:10px">${grupo.grupo}</div>
+        ${grupo.itens.map((item,ii)=>{
+          const key=`${gi}_${ii}`;
+          const checked=dados.checklist[key]||false;
+          return`<label style="display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);cursor:pointer">
+            <input type="checkbox" ${checked?'checked':''} onchange="toggleChecklist('${key}',this.checked)" style="margin-top:2px;flex-shrink:0;width:15px;height:15px;accent-color:var(--brand)">
+            <span style="font-size:13px;line-height:1.5;color:${checked?'var(--text3)':'var(--text)'};${checked?'text-decoration:line-through':''}">${item}</span>
+          </label>`;
+        }).join('')}
+      </div>`).join('')}
+    <div class="card" style="padding:16px">
+      <div style="font-weight:700;font-size:13px;color:var(--brand-dark);margin-bottom:8px">📝 Anotações livres do checklist</div>
+      <textarea id="nr01-check-obs" style="width:100%;min-height:100px;padding:10px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:'Nunito',sans-serif;font-size:13px;resize:vertical;background:var(--surface);outline:none" placeholder="Observações gerais sobre a conformidade, pontos de atenção...">${dados.checklistObs||''}</textarea>
+      <button class="btn btn-primary btn-sm" style="margin-top:8px" onclick="salvarChecklistObs()">Salvar anotações</button>
+    </div>`;
+}
+
+function toggleChecklist(key, val){
+  const dados=getNR01Dados(nr01AtualId);
+  dados.checklist[key]=val;
+  salvarNR01Dados();
+  // Atualiza progresso sem re-renderizar tudo
+  const check=calcChecklist(nr01AtualId);
+  const pct=check.total?Math.round(check.ok/check.total*100):0;
+  const bar=document.querySelector('#nr01-aba-checklist [style*="transition:width"]');
+  if(bar){bar.style.width=pct+'%';bar.style.background=pct>=80?'var(--brand)':pct>=40?'var(--amber)':'var(--coral)';}
+  const lbl=document.querySelector('#nr01-aba-checklist [style*="Progresso"]');
+  if(lbl) lbl.textContent=`Progresso do checklist: ${check.ok} / ${check.total} itens (${pct}%)`;
+}
+
+function salvarChecklistObs(){
+  const dados=getNR01Dados(nr01AtualId);
+  dados.checklistObs=document.getElementById('nr01-check-obs').value;
+  salvarNR01Dados();toast('Anotações salvas!');
+}
+
+// ── Aba Riscos ──
+function renderNR01AbaRiscos(){
+  const dados=getNR01Dados(nr01AtualId);
+  const el=document.getElementById('nr01-aba-riscos');
+  el.innerHTML=`
+    <div style="margin-bottom:12px;display:flex;justify-content:flex-end">
+      <button class="btn btn-primary btn-sm" onclick="addRisco()">+ Adicionar risco</button>
+    </div>
+    <div id="nr01-riscos-lista">
+      ${(dados.riscos||[]).length===0?'<div class="empty"><p>Nenhum risco registrado ainda</p></div>':
+        (dados.riscos||[]).map((r,i)=>`
+          <div class="card" style="padding:14px;margin-bottom:10px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
+              <div style="flex:1">
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+                  <span style="background:${r.tipo==='fisico'?'#e3f2fd':r.tipo==='quimico'?'#fff9c4':r.tipo==='biologico'?'#e8f5e9':r.tipo==='ergonomico'?'#f3e5f5':r.tipo==='acidente'?'#fce4ec':'#f5f5f5'};padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600">${{fisico:'⚡ Físico',quimico:'🧪 Químico',biologico:'🦠 Biológico',ergonomico:'🪑 Ergonômico',acidente:'⚙️ Acidente',psicossocial:'🧠 Psicossocial'}[r.tipo]||r.tipo}</span>
+                  <span style="background:${r.nivel==='intoleravel'?'var(--coral-light)':r.nivel==='moderado'?'var(--amber-light)':'var(--teal-light)'};color:${r.nivel==='intoleravel'?'var(--coral)':r.nivel==='moderado'?'var(--amber)':'var(--brand-dark)'};padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600">${{intoleravel:'🔴 Intolerável',moderado:'🟡 Moderado',aceitavel:'🟢 Aceitável'}[r.nivel]||r.nivel}</span>
+                  <span style="font-size:12px;color:var(--text2)">${r.setor||''}</span>
+                </div>
+                <div style="font-weight:600;font-size:13px">${r.descricao||''}</div>
+                ${r.controle?`<div style="font-size:12px;color:var(--text2);margin-top:4px">🛡️ ${r.controle}</div>`:''}
+              </div>
+              <div style="display:flex;gap:6px">
+                <button class="btn btn-ghost btn-xs" onclick="editarRisco(${i})">✎</button>
+                <button class="btn btn-danger btn-xs" onclick="excluirRisco(${i})">✕</button>
+              </div>
+            </div>
+          </div>`).join('')}
+    </div>
+    <div class="card" style="padding:16px;margin-top:4px">
+      <div style="font-weight:700;font-size:13px;color:var(--brand-dark);margin-bottom:8px">📝 Anotações sobre os riscos</div>
+      <textarea id="nr01-riscos-obs" style="width:100%;min-height:90px;padding:10px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:'Nunito',sans-serif;font-size:13px;resize:vertical;background:var(--surface);outline:none" placeholder="Observações gerais sobre os riscos identificados...">${dados.riscosObs||''}</textarea>
+      <button class="btn btn-primary btn-sm" style="margin-top:8px" onclick="salvarRiscosObs()">Salvar</button>
+    </div>`;
+}
+
+function addRisco(idx){
+  const dados=getNR01Dados(nr01AtualId);
+  const r=idx!==undefined?dados.riscos[idx]:{};
+  const div=document.createElement('div');
+  div.innerHTML=`
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px">
+      <div style="background:var(--surface);border-radius:var(--radius-xl);padding:24px;max-width:460px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.2)">
+        <div style="font-weight:700;font-size:16px;margin-bottom:16px">${idx!==undefined?'Editar':'Novo'} risco</div>
+        <div class="form-grid">
+          <div class="fg"><label>Tipo de perigo</label>
+            <select id="_r-tipo">
+              <option value="fisico" ${r.tipo==='fisico'?'selected':''}>⚡ Físico</option>
+              <option value="quimico" ${r.tipo==='quimico'?'selected':''}>🧪 Químico</option>
+              <option value="biologico" ${r.tipo==='biologico'?'selected':''}>🦠 Biológico</option>
+              <option value="ergonomico" ${r.tipo==='ergonomico'?'selected':''}>🪑 Ergonômico</option>
+              <option value="acidente" ${r.tipo==='acidente'?'selected':''}>⚙️ Acidente</option>
+              <option value="psicossocial" ${r.tipo==='psicossocial'?'selected':''}>🧠 Psicossocial</option>
+            </select>
+          </div>
+          <div class="fg"><label>Nível de risco</label>
+            <select id="_r-nivel">
+              <option value="intoleravel" ${r.nivel==='intoleravel'?'selected':''}>🔴 Intolerável</option>
+              <option value="moderado" ${r.nivel==='moderado'?'selected':''}>🟡 Moderado</option>
+              <option value="aceitavel" ${r.nivel==='aceitavel'?'selected':''}>🟢 Aceitável</option>
+            </select>
+          </div>
+          <div class="fg form-full"><label>Setor / Local</label><input id="_r-setor" value="${r.setor||''}" placeholder="Ex: Produção, Almoxarifado, RH..."></div>
+          <div class="fg form-full"><label>Descrição do perigo *</label><textarea id="_r-desc" style="min-height:70px">${r.descricao||''}</textarea></div>
+          <div class="fg form-full"><label>Medida de controle existente ou proposta</label><textarea id="_r-ctrl" style="min-height:60px">${r.controle||''}</textarea></div>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px">
+          <button class="btn btn-secondary" onclick="this.closest('div[style]').remove()">Cancelar</button>
+          <button class="btn btn-primary" onclick="confirmarRisco(${idx})">Salvar</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(div);
+}
+
+function editarRisco(i){addRisco(i);}
+
+function confirmarRisco(idx){
+  const desc=document.getElementById('_r-desc').value.trim();
+  if(!desc){alert('Descreva o perigo.');return;}
+  const dados=getNR01Dados(nr01AtualId);
+  const obj={tipo:document.getElementById('_r-tipo').value,nivel:document.getElementById('_r-nivel').value,setor:document.getElementById('_r-setor').value,descricao:desc,controle:document.getElementById('_r-ctrl').value};
+  if(idx!==undefined) dados.riscos[idx]=obj;
+  else dados.riscos.push(obj);
+  document.querySelector('div[style*="position:fixed"]').remove();
+  salvarNR01Dados();renderNR01AbaRiscos();toast('Risco salvo!');
+}
+
+function excluirRisco(i){
+  if(!confirm('Excluir este risco?'))return;
+  const dados=getNR01Dados(nr01AtualId);
+  dados.riscos.splice(i,1);
+  salvarNR01Dados();renderNR01AbaRiscos();
+}
+
+function salvarRiscosObs(){
+  const dados=getNR01Dados(nr01AtualId);
+  dados.riscosObs=document.getElementById('nr01-riscos-obs').value;
+  salvarNR01Dados();toast('Salvo!');
+}
+
+// ── Aba Entrevistas ──
+function renderNR01AbaEntrevistas(){
+  const dados=getNR01Dados(nr01AtualId);
+  const el=document.getElementById('nr01-aba-entrevistas');
+  el.innerHTML=`
+    <div style="margin-bottom:12px;display:flex;justify-content:flex-end">
+      <button class="btn btn-primary btn-sm" onclick="addEntrevista()">+ Nova entrevista</button>
+    </div>
+    ${(dados.entrevistas||[]).length===0?'<div class="empty"><p>Nenhuma entrevista registrada ainda</p></div>':
+      (dados.entrevistas||[]).map((e,i)=>`
+        <div class="card" style="padding:14px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div style="flex:1">
+              <div style="font-weight:600;font-size:13px">${e.nome||'Anônimo'} <span style="font-weight:400;color:var(--text2);font-size:12px">${e.cargo?'· '+e.cargo:''}</span></div>
+              <div style="font-size:11px;color:var(--text3);margin-top:2px">${e.data?fmtData(e.data):''} ${e.setor?'· '+e.setor:''}</div>
+              <div style="font-size:13px;color:var(--text);margin-top:8px;white-space:pre-wrap;line-height:1.6">${e.conteudo||''}</div>
+            </div>
+            <div style="display:flex;gap:6px;flex-shrink:0">
+              <button class="btn btn-ghost btn-xs" onclick="editarEntrevista(${i})">✎</button>
+              <button class="btn btn-danger btn-xs" onclick="excluirEntrevista(${i})">✕</button>
+            </div>
+          </div>
+        </div>`).join('')}`;
+}
+
+function addEntrevista(idx){
+  const dados=getNR01Dados(nr01AtualId);
+  const e=idx!==undefined?dados.entrevistas[idx]:{};
+  const div=document.createElement('div');
+  div.innerHTML=`
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px">
+      <div style="background:var(--surface);border-radius:var(--radius-xl);padding:24px;max-width:500px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.2)">
+        <div style="font-weight:700;font-size:16px;margin-bottom:16px">${idx!==undefined?'Editar':'Nova'} entrevista</div>
+        <div class="form-grid">
+          <div class="fg"><label>Nome do entrevistado</label><input id="_e-nome" value="${e.nome||''}" placeholder="Nome ou 'Anônimo'"></div>
+          <div class="fg"><label>Cargo / Função</label><input id="_e-cargo" value="${e.cargo||''}" placeholder="Ex: Operador, Supervisor..."></div>
+          <div class="fg"><label>Setor</label><input id="_e-setor" value="${e.setor||''}" placeholder="Ex: Produção, Logística..."></div>
+          <div class="fg"><label>Data</label><input id="_e-data" type="date" value="${e.data||hoje()}"></div>
+          <div class="fg form-full"><label>Relato / Anotações da entrevista *</label>
+            <textarea id="_e-cont" style="min-height:140px" placeholder="Registre as respostas, percepções, queixas, sugestões...">${e.conteudo||''}</textarea>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px">
+          <button class="btn btn-secondary" onclick="this.closest('div[style]').remove()">Cancelar</button>
+          <button class="btn btn-primary" onclick="confirmarEntrevista(${idx})">Salvar</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(div);
+}
+
+function editarEntrevista(i){addEntrevista(i);}
+
+function confirmarEntrevista(idx){
+  const cont=document.getElementById('_e-cont').value.trim();
+  if(!cont){alert('Registre o conteúdo da entrevista.');return;}
+  const dados=getNR01Dados(nr01AtualId);
+  const obj={nome:document.getElementById('_e-nome').value,cargo:document.getElementById('_e-cargo').value,setor:document.getElementById('_e-setor').value,data:document.getElementById('_e-data').value,conteudo:cont};
+  if(idx!==undefined) dados.entrevistas[idx]=obj;
+  else dados.entrevistas.push(obj);
+  document.querySelector('div[style*="position:fixed"]').remove();
+  salvarNR01Dados();renderNR01AbaEntrevistas();toast('Entrevista salva!');
+}
+
+function excluirEntrevista(i){
+  if(!confirm('Excluir esta entrevista?'))return;
+  const dados=getNR01Dados(nr01AtualId);
+  dados.entrevistas.splice(i,1);
+  salvarNR01Dados();renderNR01AbaEntrevistas();
+}
+
+// ── Aba Documentos ──
+function renderNR01AbaDocumentos(){
+  const dados=getNR01Dados(nr01AtualId);
+  const el=document.getElementById('nr01-aba-documentos');
+  el.innerHTML=`
+    <div style="margin-bottom:12px">
+      <label class="btn btn-primary btn-sm" style="cursor:pointer">
+        + Anexar documento
+        <input type="file" style="display:none" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt" onchange="anexarDocNR01(event)">
+      </label>
+      <span style="font-size:11px;color:var(--text3);margin-left:10px">PDF, imagens, Word, Excel · máx. 5MB</span>
+    </div>
+    <div style="margin-bottom:12px">
+      <div style="font-weight:600;font-size:13px;margin-bottom:8px">Documentos solicitados / verificados</div>
+      ${['PPRA/PGR anterior','PCMSO','Organograma','Mapa de riscos','Laudos técnicos (NHO)','Fichas de EPI','Registros de treinamentos','CAT (últimos 2 anos)','Atas de CIPA','Certificados de manutenção'].map(doc=>{
+        const key='doc_'+doc.replace(/\W/g,'_');
+        const checked=(dados.checklist||{})[key]||false;
+        return`<label style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);cursor:pointer;font-size:13px">
+          <input type="checkbox" ${checked?'checked':''} onchange="toggleChecklist('${key}',this.checked)" style="width:15px;height:15px;accent-color:var(--brand)">
+          <span style="${checked?'color:var(--text3);text-decoration:line-through':''}">${doc}</span>
+        </label>`;
+      }).join('')}
+    </div>
+    <div style="margin-top:16px">
+      <div style="font-weight:600;font-size:13px;margin-bottom:8px">Arquivos anexados</div>
+      ${(dados.documentos||[]).length===0?'<div style="color:var(--text3);font-size:13px;padding:12px 0">Nenhum arquivo anexado</div>':
+        (dados.documentos||[]).map((d,i)=>`
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+            <span style="font-size:20px">${d.tipo?.startsWith('image/')? '🖼️':'📄'}</span>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.nome}</div>
+              <div style="font-size:11px;color:var(--text3)">${d.categoria||''} · ${formatarTamanho(d.tamanho)}</div>
+            </div>
+            <button class="btn btn-ghost btn-xs" onclick="baixarDocNR01(${i})">⬇</button>
+            <button class="btn btn-danger btn-xs" onclick="excluirDocNR01(${i})">✕</button>
+          </div>`).join('')}
+    </div>
+    <div class="card" style="padding:14px;margin-top:12px">
+      <div style="font-weight:600;font-size:13px;margin-bottom:8px">📝 Anotações sobre documentos</div>
+      <textarea id="nr01-docs-obs" style="width:100%;min-height:80px;padding:10px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:'Nunito',sans-serif;font-size:13px;resize:vertical;background:var(--surface);outline:none" placeholder="Documentos em falta, pendências, observações...">${dados.docsObs||''}</textarea>
+      <button class="btn btn-primary btn-sm" style="margin-top:8px" onclick="salvarDocsObs()">Salvar</button>
+    </div>`;
+}
+
+function anexarDocNR01(event){
+  const file=event.target.files[0];
+  if(!file) return;
+  if(file.size>5*1024*1024){alert('Arquivo muito grande. Máximo: 5MB');event.target.value='';return;}
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const dados=getNR01Dados(nr01AtualId);
+    if(!dados.documentos) dados.documentos=[];
+    dados.documentos.push({nome:file.name,tipo:file.type,tamanho:file.size,categoria:'documento',dados:e.target.result,data:hoje()});
+    salvarNR01Dados();renderNR01AbaDocumentos();toast('Documento anexado!');
+  };
+  reader.readAsDataURL(file);
+}
+
+function baixarDocNR01(i){
+  const dados=getNR01Dados(nr01AtualId);
+  const d=dados.documentos[i];
+  if(!d) return;
+  const a=document.createElement('a');
+  a.href=d.dados;a.download=d.nome;a.click();
+}
+
+function excluirDocNR01(i){
+  if(!confirm('Excluir este documento?'))return;
+  const dados=getNR01Dados(nr01AtualId);
+  dados.documentos.splice(i,1);
+  salvarNR01Dados();renderNR01AbaDocumentos();
+}
+
+function salvarDocsObs(){
+  const dados=getNR01Dados(nr01AtualId);
+  dados.docsObs=document.getElementById('nr01-docs-obs').value;
+  salvarNR01Dados();toast('Salvo!');
+}
+
+// ── Aba Plano de Ação ──
+function renderNR01AbaPlano(){
+  const dados=getNR01Dados(nr01AtualId);
+  const el=document.getElementById('nr01-aba-plano');
+  el.innerHTML=`
+    <div style="margin-bottom:12px;display:flex;justify-content:flex-end">
+      <button class="btn btn-primary btn-sm" onclick="addAcao()">+ Nova ação</button>
+    </div>
+    ${(dados.plano||[]).length===0?'<div class="empty"><p>Nenhuma ação registrada ainda</p></div>':
+      `<table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead><tr style="border-bottom:2px solid var(--border);text-align:left">
+          <th style="padding:8px;color:var(--text2);font-weight:600">O quê</th>
+          <th style="padding:8px;color:var(--text2);font-weight:600">Responsável</th>
+          <th style="padding:8px;color:var(--text2);font-weight:600">Prazo</th>
+          <th style="padding:8px;color:var(--text2);font-weight:600">Status</th>
+          <th style="width:60px"></th>
+        </tr></thead>
+        <tbody>${(dados.plano||[]).map((a,i)=>`
+          <tr style="border-bottom:1px solid var(--border)">
+            <td style="padding:8px">
+              <div style="font-weight:600">${a.acao||''}</div>
+              ${a.obs?`<div style="font-size:11px;color:var(--text3);margin-top:2px">${a.obs}</div>`:''}
+            </td>
+            <td style="padding:8px;color:var(--text2)">${a.responsavel||'—'}</td>
+            <td style="padding:8px;color:var(--text2)">${a.prazo?fmtData(a.prazo):'—'}</td>
+            <td style="padding:8px">
+              <select onchange="atualizarStatusAcao(${i},this.value)" style="padding:4px 8px;border:1.5px solid var(--border);border-radius:20px;font-size:11px;font-family:'Nunito',sans-serif;background:var(--surface);cursor:pointer;outline:none">
+                <option value="pendente" ${a.status==='pendente'?'selected':''}>⏳ Pendente</option>
+                <option value="andamento" ${a.status==='andamento'?'selected':''}>🔄 Em andamento</option>
+                <option value="concluido" ${a.status==='concluido'?'selected':''}>✅ Concluído</option>
+              </select>
+            </td>
+            <td style="padding:8px;text-align:right">
+              <button class="btn btn-ghost btn-xs" onclick="editarAcao(${i})">✎</button>
+              <button class="btn btn-danger btn-xs" onclick="excluirAcao(${i})">✕</button>
+            </td>
+          </tr>`).join('')}
+        </tbody>
+      </table>`}
+    <div class="card" style="padding:14px;margin-top:12px">
+      <div style="font-weight:600;font-size:13px;margin-bottom:8px">📝 Considerações finais / Recomendações</div>
+      <textarea id="nr01-plano-obs" style="width:100%;min-height:120px;padding:10px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:'Nunito',sans-serif;font-size:13px;resize:vertical;background:var(--surface);outline:none" placeholder="Conclusões, recomendações gerais, próximos passos do projeto...">${dados.planoObs||''}</textarea>
+      <button class="btn btn-primary btn-sm" style="margin-top:8px" onclick="salvarPlanoObs()">Salvar</button>
+    </div>`;
+}
+
+function addAcao(idx){
+  const dados=getNR01Dados(nr01AtualId);
+  const a=idx!==undefined?dados.plano[idx]:{};
+  const div=document.createElement('div');
+  div.innerHTML=`
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px">
+      <div style="background:var(--surface);border-radius:var(--radius-xl);padding:24px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.2)">
+        <div style="font-weight:700;font-size:16px;margin-bottom:16px">${idx!==undefined?'Editar':'Nova'} ação</div>
+        <div class="form-grid">
+          <div class="fg form-full"><label>Ação / O que fazer *</label><textarea id="_a-acao" style="min-height:70px" placeholder="Descreva a ação necessária...">${a.acao||''}</textarea></div>
+          <div class="fg"><label>Responsável</label><input id="_a-resp" value="${a.responsavel||''}" placeholder="Nome ou setor"></div>
+          <div class="fg"><label>Prazo</label><input id="_a-prazo" type="date" value="${a.prazo||''}"></div>
+          <div class="fg form-full"><label>Status</label>
+            <select id="_a-status">
+              <option value="pendente" ${(a.status||'pendente')==='pendente'?'selected':''}>⏳ Pendente</option>
+              <option value="andamento" ${a.status==='andamento'?'selected':''}>🔄 Em andamento</option>
+              <option value="concluido" ${a.status==='concluido'?'selected':''}>✅ Concluído</option>
+            </select>
+          </div>
+          <div class="fg form-full"><label>Observação</label><input id="_a-obs" value="${a.obs||''}" placeholder="Opcional"></div>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px">
+          <button class="btn btn-secondary" onclick="this.closest('div[style]').remove()">Cancelar</button>
+          <button class="btn btn-primary" onclick="confirmarAcao(${idx})">Salvar</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(div);
+}
+
+function editarAcao(i){addAcao(i);}
+
+function confirmarAcao(idx){
+  const acao=document.getElementById('_a-acao').value.trim();
+  if(!acao){alert('Descreva a ação.');return;}
+  const dados=getNR01Dados(nr01AtualId);
+  const obj={acao,responsavel:document.getElementById('_a-resp').value,prazo:document.getElementById('_a-prazo').value,status:document.getElementById('_a-status').value,obs:document.getElementById('_a-obs').value};
+  if(idx!==undefined) dados.plano[idx]=obj;
+  else dados.plano.push(obj);
+  document.querySelector('div[style*="position:fixed"]').remove();
+  salvarNR01Dados();renderNR01AbaPlano();toast('Ação salva!');
+}
+
+function excluirAcao(i){
+  if(!confirm('Excluir esta ação?'))return;
+  const dados=getNR01Dados(nr01AtualId);
+  dados.plano.splice(i,1);
+  salvarNR01Dados();renderNR01AbaPlano();
+}
+
+function atualizarStatusAcao(i,val){
+  const dados=getNR01Dados(nr01AtualId);
+  dados.plano[i].status=val;
+  salvarNR01Dados();
+}
+
+function salvarPlanoObs(){
+  const dados=getNR01Dados(nr01AtualId);
+  dados.planoObs=document.getElementById('nr01-plano-obs').value;
+  salvarNR01Dados();toast('Salvo!');
 }
 
 // ═══ FINANCEIRO — DESPESAS E SUBLOCAÇÕES ═══
