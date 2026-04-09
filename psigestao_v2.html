@@ -6,6 +6,8 @@
 <title>PsiGestão</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://apis.google.com/js/api.js" async defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Nunito:wght@300;400;500;600&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
@@ -905,7 +907,10 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
         <div class="modal-title" id="nr01-ficha-titulo">Ficha da empresa</div>
         <div class="modal-subtitle" id="nr01-ficha-sub"></div>
       </div>
-      <button class="modal-close" onclick="closeModal('ov-nr01-ficha')">✕</button>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="btn btn-secondary btn-sm" onclick="abrirModalExportar()" style="font-size:12px">⬇ Exportar</button>
+        <button class="modal-close" onclick="closeModal('ov-nr01-ficha')">✕</button>
+      </div>
     </div>
     <div class="tabs">
       <button class="tab active" onclick="abaTabNR01('geral',this)">📋 Geral</button>
@@ -923,6 +928,60 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
     <div id="nr01-aba-documentos" style="display:none"></div>
     <div id="nr01-aba-plano" style="display:none"></div>
     <div id="nr01-aba-cronograma" style="display:none"></div>
+  </div>
+</div>
+
+<!-- MODAL EXPORTAR NR01 -->
+<div class="overlay" id="ov-exportar-nr01">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <div class="modal-title">⬇ Exportar relatório</div>
+      <button class="modal-close" onclick="closeModal('ov-exportar-nr01')">✕</button>
+    </div>
+    <div style="padding:4px 0 12px">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:14px">Selecione as seções que deseja incluir no relatório:</div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:13px">
+          <input type="checkbox" id="exp-geral" checked style="width:16px;height:16px;accent-color:var(--brand)">
+          <span>📋 Dados gerais da empresa</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:13px">
+          <input type="checkbox" id="exp-checklist" checked style="width:16px;height:16px;accent-color:var(--brand)">
+          <span>✅ Checklist de riscos psicossociais</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:13px">
+          <input type="checkbox" id="exp-riscos" checked style="width:16px;height:16px;accent-color:var(--brand)">
+          <span>⚠️ Riscos identificados</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:13px">
+          <input type="checkbox" id="exp-entrevistas" style="width:16px;height:16px;accent-color:var(--brand)">
+          <span>🗣️ Entrevistas realizadas</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:13px">
+          <input type="checkbox" id="exp-plano" checked style="width:16px;height:16px;accent-color:var(--brand)">
+          <span>🎯 Plano de ação</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:13px">
+          <input type="checkbox" id="exp-cronograma" style="width:16px;height:16px;accent-color:var(--brand)">
+          <span>📅 Cronograma</span>
+        </label>
+      </div>
+
+      <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:8px">Formato de exportação:</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <button class="btn btn-secondary" onclick="exportarPDF()" style="padding:14px;font-size:13px;display:flex;flex-direction:column;align-items:center;gap:4px;height:auto">
+          <span style="font-size:24px">📄</span>
+          <strong>PDF</strong>
+          <span style="font-size:11px;color:var(--text2);font-weight:400">Relatório formatado</span>
+        </button>
+        <button class="btn btn-secondary" onclick="exportarExcel()" style="padding:14px;font-size:13px;display:flex;flex-direction:column;align-items:center;gap:4px;height:auto">
+          <span style="font-size:24px">📊</span>
+          <strong>Excel</strong>
+          <span style="font-size:11px;color:var(--text2);font-weight:400">Planilha com abas</span>
+        </button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -2951,6 +3010,378 @@ function salvarCronObs(){
   const dados=getNR01Dados(nr01AtualId);
   dados.cronogramaObs=document.getElementById('nr01-cron-obs').value;
   salvarNR01Dados();toast('Salvo!');
+}
+
+// ═══ EXPORTAÇÃO NR01 ═══
+
+function abrirModalExportar(){
+  openModal('ov-exportar-nr01');
+}
+
+function getSelecao(){
+  return{
+    geral:document.getElementById('exp-geral')?.checked,
+    checklist:document.getElementById('exp-checklist')?.checked,
+    riscos:document.getElementById('exp-riscos')?.checked,
+    entrevistas:document.getElementById('exp-entrevistas')?.checked,
+    plano:document.getElementById('exp-plano')?.checked,
+    cronograma:document.getElementById('exp-cronograma')?.checked,
+  };
+}
+
+function getNomeResponsavel(){
+  const p=DB.perfil||{};
+  const nome=p.nome||'Pâmela Fardin Pedruzzi';
+  const crp=p.crp||'CRP 16/5981';
+  return{nome,crp,linha:`${nome} — ${crp}`};
+}
+
+// ─── PDF ───
+function exportarPDF(){
+  if(typeof window.jspdf==='undefined'){
+    alert('Biblioteca PDF ainda carregando. Aguarde um momento e tente novamente.');return;
+  }
+  const emp=(DB.nr01Empresas||[]).find(x=>x.id===nr01AtualId);
+  if(!emp) return;
+  const dados=getNR01Dados(nr01AtualId);
+  const sel=getSelecao();
+  const resp=getNomeResponsavel();
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const W=210, mg=18, lw=W-mg*2;
+  let y=mg;
+
+  // Helpers
+  const corTitulo=[13,90,70], corTexto=[28,22,18], corSub=[107,97,88], corLinha=[221,216,207];
+  const pdfColor=(r,g,b)=>doc.setTextColor(r,g,b);
+  const pdfLine=()=>{doc.setDrawColor(...corLinha);doc.setLineWidth(.3);doc.line(mg,y,W-mg,y);y+=4;};
+  const checkY=(needed=10)=>{if(y+needed>285){doc.addPage();y=mg;}};
+  const txt=(text,size,bold,color,indent=0)=>{
+    doc.setFontSize(size);
+    doc.setFont('helvetica',bold?'bold':'normal');
+    pdfColor(...(color||corTexto));
+    const lines=doc.splitTextToSize(String(text||''),lw-indent);
+    checkY(lines.length*size*.4+3);
+    doc.text(lines,mg+indent,y);
+    y+=lines.length*(size*.45)+1;
+  };
+  const secao=(titulo)=>{
+    checkY(12);y+=3;
+    doc.setFillColor(...corTitulo);
+    doc.roundedRect(mg,y-4,lw,8,1,1,'F');
+    doc.setFontSize(10);doc.setFont('helvetica','bold');
+    doc.setTextColor(255,255,255);
+    doc.text(titulo,mg+4,y+1);
+    y+=8;pdfColor(...corTexto);
+  };
+
+  // Cabeçalho
+  doc.setFillColor(13,90,70);
+  doc.rect(0,0,W,28,'F');
+  doc.setFontSize(16);doc.setFont('helvetica','bold');
+  doc.setTextColor(255,255,255);
+  doc.text('Avaliação de Riscos Psicossociais',mg,13);
+  doc.setFontSize(10);doc.setFont('helvetica','normal');
+  doc.text('Relatório NR01 — Anexo I',mg,20);
+  doc.setTextColor(200,240,230);
+  doc.text(new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'}),W-mg,20,{align:'right'});
+  y=36;
+
+  // Empresa
+  doc.setFontSize(18);doc.setFont('helvetica','bold');
+  pdfColor(...corTitulo);
+  doc.text(emp.nome||'',mg,y);y+=8;
+  if(emp.setor){txt(emp.setor,10,false,corSub);}
+  pdfLine();
+
+  // Dados gerais
+  if(sel.geral){
+    secao('📋 DADOS DA EMPRESA');
+    const campos=[
+      ['CNPJ',emp.cnpj],['Setor / Ramo',emp.setor],
+      ['Nº de funcionários',emp.nfunc?emp.nfunc+' trabalhadores':null],
+      ['Responsável na empresa',emp.responsavel],['Telefone',emp.tel],
+      ['Início do projeto',emp.inicio?fmtData(emp.inicio):null],
+      ['Previsão de entrega',emp.entrega?fmtData(emp.entrega):null],
+      ['Status',emp.status?(NR01_STATUS[emp.status]?.label||emp.status):null],
+    ].filter(([,v])=>v);
+    campos.forEach(([k,v])=>{
+      checkY(7);
+      doc.setFontSize(9);doc.setFont('helvetica','bold');pdfColor(...corSub);
+      doc.text(k+':',mg,y);
+      doc.setFont('helvetica','normal');pdfColor(...corTexto);
+      doc.text(String(v),mg+45,y);
+      y+=6;
+    });
+    if(emp.obs){y+=2;txt('Observações: '+emp.obs,9,false,corSub);}
+    y+=4;
+  }
+
+  // Checklist
+  if(sel.checklist){
+    secao('✅ CHECKLIST DE RISCOS PSICOSSOCIAIS');
+    const check=dados.checklist||{};
+    let totalItens=0,okItens=0;
+    NR01_CHECKLIST.forEach((grupo,gi)=>{
+      checkY(10);y+=2;
+      txt(grupo.grupo,10,true,corTitulo);
+      grupo.itens.forEach((item,ii)=>{
+        const key=`${gi}_${ii}`;
+        const marcado=check[key]||false;
+        if(marcado) okItens++;
+        totalItens++;
+        checkY(6);
+        doc.setFontSize(8.5);doc.setFont('helvetica','normal');
+        pdfColor(...(marcado?[150,150,150]:corTexto));
+        const mark=marcado?'☑':'☐';
+        const lines=doc.splitTextToSize(mark+' '+item,lw-6);
+        doc.text(lines,mg+3,y);
+        if(marcado){
+          doc.setDrawColor(150,150,150);
+          doc.setLineWidth(.2);
+          lines.forEach((_,li)=>doc.line(mg+7,y-2+(li*4),mg+7+doc.getTextWidth(item.slice(0,60)),y-2+(li*4)));
+        }
+        y+=lines.length*4.5;
+      });
+    });
+    y+=2;
+    const pct=totalItens?Math.round(okItens/totalItens*100):0;
+    txt(`Progresso: ${okItens}/${totalItens} itens concluídos (${pct}%)`,9,true,[13,90,70]);
+    if(dados.checklistObs){txt('Obs: '+dados.checklistObs,9,false,corSub);}
+    y+=4;
+  }
+
+  // Riscos
+  if(sel.riscos&&(dados.riscos||[]).length){
+    secao('⚠️ RISCOS IDENTIFICADOS');
+    const nivelLabel={intoleravel:'Intolerável',moderado:'Moderado',aceitavel:'Aceitável'};
+    const tipoLabel={fisico:'Físico',quimico:'Químico',biologico:'Biológico',ergonomico:'Ergonômico',acidente:'Acidente',psicossocial:'Psicossocial'};
+    dados.riscos.forEach((r,i)=>{
+      checkY(18);
+      doc.setFillColor(245,242,238);
+      const startY=y;
+      y+=2;
+      txt(`${i+1}. ${r.descricao||''}`,10,true);
+      txt(`Tipo: ${tipoLabel[r.tipo]||r.tipo}   |   Nível: ${nivelLabel[r.nivel]||r.nivel}   |   Setor: ${r.setor||'—'}`,8.5,false,corSub,2);
+      if(r.controle) txt('Controle: '+r.controle,8.5,false,corSub,2);
+      doc.setFillColor(245,242,238);
+      doc.rect(mg,startY-1,lw,y-startY+2,'F');
+      y+=4;
+    });
+    if(dados.riscosObs){txt('Obs: '+dados.riscosObs,9,false,corSub);}
+    y+=4;
+  }
+
+  // Entrevistas
+  if(sel.entrevistas&&(dados.entrevistas||[]).length){
+    secao('🗣️ ENTREVISTAS REALIZADAS');
+    dados.entrevistas.forEach((e,i)=>{
+      checkY(14);y+=2;
+      txt(`${i+1}. ${e.nome||'Anônimo'}${e.cargo?' — '+e.cargo:''}${e.setor?' ('+e.setor+')':''}`,10,true);
+      if(e.data) txt('Data: '+fmtData(e.data),8.5,false,corSub,2);
+      if(e.conteudo) txt(e.conteudo,9,false,corTexto,2);
+      y+=4;pdfLine();
+    });
+    y+=2;
+  }
+
+  // Plano de ação
+  if(sel.plano&&(dados.plano||[]).length){
+    secao('🎯 PLANO DE AÇÃO');
+    const stLabel={pendente:'Pendente',andamento:'Em andamento',concluido:'Concluído'};
+    dados.plano.forEach((a,i)=>{
+      checkY(14);y+=1;
+      txt(`${i+1}. ${a.acao||''}`,10,true);
+      const meta=[];
+      if(a.responsavel) meta.push('Responsável: '+a.responsavel);
+      if(a.prazo) meta.push('Prazo: '+fmtData(a.prazo));
+      meta.push('Status: '+(stLabel[a.status]||a.status||'Pendente'));
+      txt(meta.join('   |   '),8.5,false,corSub,2);
+      if(a.obs) txt('Obs: '+a.obs,8.5,false,corSub,2);
+      y+=3;
+    });
+    if(dados.planoObs){y+=2;txt('Considerações finais: '+dados.planoObs,9,false,corSub);}
+    y+=4;
+  }
+
+  // Cronograma
+  if(sel.cronograma&&(dados.cronograma||[]).length){
+    secao('📅 CRONOGRAMA');
+    const stLabel={pendente:'Pendente',andamento:'Em andamento',concluido:'Concluído',cancelado:'Cancelado'};
+    dados.cronograma.forEach((c,i)=>{
+      checkY(10);y+=1;
+      const status=stLabel[c.status]||'Pendente';
+      txt(`${i+1}. ${c.etapa||''}`,10,true);
+      const meta=[];
+      if(c.inicioPrev) meta.push('Início: '+fmtData(c.inicioPrev));
+      if(c.fimPrev) meta.push('Fim: '+fmtData(c.fimPrev));
+      if(c.responsavel) meta.push('Resp.: '+c.responsavel);
+      meta.push(status);
+      txt(meta.join('   |   '),8.5,false,corSub,2);
+      y+=2;
+    });
+    if(dados.cronogramaObs){txt('Obs: '+dados.cronogramaObs,9,false,corSub);}
+    y+=4;
+  }
+
+  // Rodapé em todas as páginas
+  const totalPags=doc.getNumberOfPages();
+  for(let p=1;p<=totalPags;p++){
+    doc.setPage(p);
+    doc.setDrawColor(...corLinha);doc.setLineWidth(.3);
+    doc.line(mg,285,W-mg,285);
+    doc.setFontSize(8);doc.setFont('helvetica','normal');
+    pdfColor(...corSub);
+    doc.text(resp.nome+' — '+resp.crp,mg,290);
+    doc.text('Responsável Técnica',mg,294);
+    doc.text(`Pág. ${p}/${totalPags}`,W-mg,290,{align:'right'});
+    doc.text('Avaliação de Riscos Psicossociais — NR01',W-mg,294,{align:'right'});
+  }
+
+  const nomeArq=(emp.nome||'relatorio').replace(/[^a-zA-Z0-9]/g,'_').slice(0,40);
+  doc.save(`NR01_${nomeArq}.pdf`);
+  closeModal('ov-exportar-nr01');
+  toast('PDF gerado!');
+}
+
+// ─── EXCEL ───
+function exportarExcel(){
+  if(typeof XLSX==='undefined'){
+    alert('Biblioteca Excel ainda carregando. Aguarde um momento e tente novamente.');return;
+  }
+  const emp=(DB.nr01Empresas||[]).find(x=>x.id===nr01AtualId);
+  if(!emp) return;
+  const dados=getNR01Dados(nr01AtualId);
+  const sel=getSelecao();
+  const resp=getNomeResponsavel();
+  const wb=XLSX.utils.book_new();
+  const dataHoje=new Date().toLocaleDateString('pt-BR');
+
+  // helper: adiciona aba
+  const addAba=(nome,rows)=>{
+    const ws=XLSX.utils.aoa_to_sheet(rows);
+    // largura das colunas
+    ws['!cols']=[{wch:40},{wch:25},{wch:25},{wch:20},{wch:30}];
+    XLSX.utils.book_append_sheet(wb,ws,nome);
+  };
+
+  // Aba: Dados Gerais
+  if(sel.geral){
+    const rows=[
+      ['AVALIAÇÃO DE RISCOS PSICOSSOCIAIS — NR01'],
+      ['Empresa:',emp.nome||''],
+      ['Data do relatório:',dataHoje],
+      ['Responsável técnica:',resp.nome],
+      ['CRP:',resp.crp],
+      [],
+      ['DADOS DA EMPRESA'],
+      ['Campo','Informação'],
+      ['CNPJ',emp.cnpj||''],
+      ['Setor / Ramo',emp.setor||''],
+      ['Nº de funcionários',emp.nfunc||''],
+      ['Responsável na empresa',emp.responsavel||''],
+      ['Telefone',emp.tel||''],
+      ['Início do projeto',emp.inicio?fmtData(emp.inicio):''],
+      ['Previsão de entrega',emp.entrega?fmtData(emp.entrega):''],
+      ['Status',NR01_STATUS[emp.status]?.label||emp.status||''],
+      ['Observações',emp.obs||''],
+    ];
+    addAba('Dados Gerais',rows);
+  }
+
+  // Aba: Checklist
+  if(sel.checklist){
+    const check=dados.checklist||{};
+    const rows=[
+      ['CHECKLIST DE RISCOS PSICOSSOCIAIS — NR01 Anexo I'],
+      ['Empresa:',emp.nome,'Data:',dataHoje],
+      [],
+      ['Grupo','Item','Status'],
+    ];
+    NR01_CHECKLIST.forEach((grupo,gi)=>{
+      grupo.itens.forEach((item,ii)=>{
+        const key=`${gi}_${ii}`;
+        rows.push([grupo.grupo,item,check[key]?'✅ Concluído':'☐ Pendente']);
+      });
+    });
+    const check_=calcChecklist(nr01AtualId);
+    const pct=check_.total?Math.round(check_.ok/check_.total*100):0;
+    rows.push([],[`Progresso: ${check_.ok}/${check_.total} itens (${pct}%)`]);
+    if(dados.checklistObs) rows.push(['Observações:',dados.checklistObs]);
+    addAba('Checklist',rows);
+  }
+
+  // Aba: Riscos
+  if(sel.riscos&&(dados.riscos||[]).length){
+    const tipoLabel={fisico:'Físico',quimico:'Químico',biologico:'Biológico',ergonomico:'Ergonômico',acidente:'Acidente',psicossocial:'Psicossocial'};
+    const nivelLabel={intoleravel:'Intolerável',moderado:'Moderado',aceitavel:'Aceitável'};
+    const rows=[
+      ['RISCOS IDENTIFICADOS — '+emp.nome],
+      ['Data:',dataHoje],
+      [],
+      ['Nº','Tipo','Nível','Setor','Descrição do perigo','Medida de controle'],
+    ];
+    (dados.riscos||[]).forEach((r,i)=>{
+      rows.push([i+1,tipoLabel[r.tipo]||r.tipo,nivelLabel[r.nivel]||r.nivel,r.setor||'',r.descricao||'',r.controle||'']);
+    });
+    if(dados.riscosObs) rows.push([],['Observações:',dados.riscosObs]);
+    addAba('Riscos',rows);
+  }
+
+  // Aba: Entrevistas
+  if(sel.entrevistas&&(dados.entrevistas||[]).length){
+    const rows=[
+      ['ENTREVISTAS REALIZADAS — '+emp.nome],
+      ['Data do relatório:',dataHoje],
+      [],
+      ['Nº','Entrevistado','Cargo','Setor','Data','Relato'],
+    ];
+    (dados.entrevistas||[]).forEach((e,i)=>{
+      rows.push([i+1,e.nome||'Anônimo',e.cargo||'',e.setor||'',e.data?fmtData(e.data):'',e.conteudo||'']);
+    });
+    addAba('Entrevistas',rows);
+  }
+
+  // Aba: Plano de Ação
+  if(sel.plano&&(dados.plano||[]).length){
+    const stLabel={pendente:'Pendente',andamento:'Em andamento',concluido:'Concluído'};
+    const rows=[
+      ['PLANO DE AÇÃO — '+emp.nome],
+      ['Data:',dataHoje,'Responsável técnica:',resp.linha],
+      [],
+      ['Nº','Ação','Responsável','Prazo','Status','Observação'],
+    ];
+    (dados.plano||[]).forEach((a,i)=>{
+      rows.push([i+1,a.acao||'',a.responsavel||'',a.prazo?fmtData(a.prazo):'',stLabel[a.status]||a.status||'Pendente',a.obs||'']);
+    });
+    if(dados.planoObs) rows.push([],['Considerações finais:',dados.planoObs]);
+    addAba('Plano de Ação',rows);
+  }
+
+  // Aba: Cronograma
+  if(sel.cronograma&&(dados.cronograma||[]).length){
+    const stLabel={pendente:'Pendente',andamento:'Em andamento',concluido:'Concluído',cancelado:'Cancelado'};
+    const rows=[
+      ['CRONOGRAMA — '+emp.nome],
+      ['Data:',dataHoje],
+      [],
+      ['Nº','Etapa','Início previsto','Fim previsto','Responsável','Status'],
+    ];
+    (dados.cronograma||[]).forEach((c,i)=>{
+      rows.push([i+1,c.etapa||'',c.inicioPrev?fmtData(c.inicioPrev):'',c.fimPrev?fmtData(c.fimPrev):'',c.responsavel||'',stLabel[c.status]||c.status||'Pendente']);
+    });
+    if(dados.cronogramaObs) rows.push([],['Observações:',dados.cronogramaObs]);
+    addAba('Cronograma',rows);
+  }
+
+  if(wb.SheetNames.length===0){
+    alert('Selecione ao menos uma seção para exportar.');return;
+  }
+
+  const nomeArq=(emp.nome||'relatorio').replace(/[^a-zA-Z0-9]/g,'_').slice(0,40);
+  XLSX.writeFile(wb,`NR01_${nomeArq}.xlsx`);
+  closeModal('ov-exportar-nr01');
+  toast('Excel gerado!');
 }
 
 // ═══ FINANCEIRO — DESPESAS E SUBLOCAÇÕES ═══
