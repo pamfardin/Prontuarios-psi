@@ -914,6 +914,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
       <button class="tab" onclick="abaTabNR01('entrevistas',this)">🗣️ Entrevistas</button>
       <button class="tab" onclick="abaTabNR01('documentos',this)">📎 Documentos</button>
       <button class="tab" onclick="abaTabNR01('plano',this)">🎯 Plano de ação</button>
+      <button class="tab" onclick="abaTabNR01('cronograma',this)">📅 Cronograma</button>
     </div>
     <div id="nr01-aba-geral"></div>
     <div id="nr01-aba-checklist" style="display:none"></div>
@@ -921,6 +922,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
     <div id="nr01-aba-entrevistas" style="display:none"></div>
     <div id="nr01-aba-documentos" style="display:none"></div>
     <div id="nr01-aba-plano" style="display:none"></div>
+    <div id="nr01-aba-cronograma" style="display:none"></div>
   </div>
 </div>
 
@@ -2143,64 +2145,56 @@ const NR01_STATUS={
 };
 
 const NR01_CHECKLIST=[
-  {grupo:'1. Identificação e Escopo',itens:[
-    'Identificação da organização (razão social, CNPJ, endereço)',
-    'Definição do escopo do GRO/PGR',
-    'Identificação dos processos produtivos e atividades',
-    'Levantamento do número de trabalhadores expostos',
-    'Identificação de trabalhadores terceirizados e temporários',
+  {grupo:'1. Levantamento inicial',itens:[
+    'Apresentação da metodologia de avaliação psicossocial à empresa',
+    'Definição do escopo: setores, cargos e número de trabalhadores a avaliar',
+    'Identificação de grupos ocupacionais com maior exposição a riscos psicossociais',
+    'Levantamento do histórico de afastamentos, adoecimento mental e turnover',
+    'Verificação de registros anteriores de assédio, conflitos ou violência no trabalho',
   ]},
-  {grupo:'2. Inventário de Riscos',itens:[
-    'Identificação de perigos físicos (ruído, calor, vibração, radiação)',
-    'Identificação de perigos químicos (produtos, poeiras, vapores)',
-    'Identificação de perigos biológicos (vírus, bactérias, fungos)',
-    'Identificação de perigos ergonômicos (postura, esforço, repetitividade)',
-    'Identificação de perigos de acidentes (máquinas, eletricidade, quedas)',
-    'Identificação de perigos psicossociais conforme NR01 (§ 1.1.1, alínea "f")',
+  {grupo:'2. Fatores psicossociais de risco — NR01 Anexo I',itens:[
+    'Avaliação de demandas excessivas: ritmo intenso, volume e pressão por resultados',
+    'Avaliação de baixo controle/autonomia do trabalhador sobre suas tarefas',
+    'Identificação de desequilíbrio entre esforço e recompensa (salário, reconhecimento)',
+    'Avaliação do suporte social de gestores (feedbacks, apoio, comunicação)',
+    'Avaliação do suporte social entre colegas (clima, colaboração, conflitos)',
+    'Identificação de assédio moral: humilhações, isolamento, sabotagem de trabalho',
+    'Identificação de assédio sexual: constrangimentos, insinuações, abusos',
+    'Avaliação de violência no trabalho: ameaças, agressões físicas ou verbais',
+    'Identificação de conflitos de papel: funções ambíguas ou contraditórias',
+    'Avaliação de sobrecarga de papel: acúmulo de responsabilidades incompatíveis',
+    'Verificação de condições de trabalho remoto/híbrido e impacto na saúde mental',
+    'Avaliação de fatores organizacionais: metas irreais, falta de clareza, mudanças frequentes',
   ]},
-  {grupo:'3. Avaliação e Classificação',itens:[
-    'Avaliação da probabilidade de ocorrência de cada perigo',
-    'Avaliação da severidade dos danos potenciais',
-    'Classificação dos riscos (aceitável, tolerável, intolerável)',
-    'Priorização dos riscos para controle',
-    'Verificação de conformidade com NRs específicas',
+  {grupo:'3. Escuta e coleta de dados',itens:[
+    'Realização de entrevistas individuais com trabalhadores (amostragem representativa)',
+    'Aplicação de instrumento validado de avaliação psicossocial (ex: COPSOQ, JCQ, ERI)',
+    'Realização de grupos focais ou rodas de conversa com equipes',
+    'Entrevistas com gestores e lideranças sobre clima organizacional',
+    'Observação direta das condições e dinâmicas de trabalho',
   ]},
-  {grupo:'4. Medidas de Controle',itens:[
-    'Medidas de eliminação do perigo',
-    'Medidas de substituição do agente de risco',
-    'Controles de engenharia (enclausuramento, ventilação, etc.)',
-    'Medidas administrativas (procedimentos, treinamentos)',
-    'Equipamentos de Proteção Individual (EPIs) adequados',
-    'Verificação da eficácia das medidas existentes',
+  {grupo:'4. Análise e classificação dos riscos',itens:[
+    'Classificação dos fatores identificados por frequência e intensidade',
+    'Avaliação da probabilidade de dano à saúde mental dos trabalhadores',
+    'Classificação do nível de risco: aceitável, moderado ou intolerável',
+    'Identificação dos setores e grupos mais vulneráveis',
+    'Cruzamento dos dados qualitativos (entrevistas) com os quantitativos (instrumentos)',
   ]},
-  {grupo:'5. Riscos Psicossociais — NR01 (Anexo I)',itens:[
-    'Identificação de fatores psicossociais de risco no trabalho (NR01 Anexo I, item 1)',
-    'Avaliação de demandas excessivas de trabalho (ritmo, volume, pressão por resultados)',
-    'Avaliação do nível de autonomia e controle do trabalhador sobre suas tarefas',
-    'Identificação de situações de assédio moral ou sexual no ambiente de trabalho',
-    'Avaliação do suporte social de gestores e colegas (relacionamentos, comunicação)',
-    'Identificação de conflitos de papel (ambiguidade, sobrecarga de funções)',
-    'Avaliação de condições de trabalho remoto ou híbrido e seus impactos',
-    'Verificação de mecanismos de escuta ativa e canais de denúncia disponíveis',
-    'Verificação de programas de promoção de saúde mental existentes na empresa',
-    'Elaboração do plano de ação para controle dos fatores psicossociais identificados',
-    'Definição de indicadores de monitoramento dos riscos psicossociais',
-    'Prazo máximo de implementação das medidas: conforme NR01 (até 26/05/2025 para MEI/ME/EPP; até 26/05/2026 para demais)',
+  {grupo:'5. Medidas de controle e prevenção',itens:[
+    'Proposição de medidas de eliminação ou redução das demandas excessivas',
+    'Proposição de melhorias na autonomia e organização do trabalho',
+    'Recomendação de políticas contra assédio e violência (canais de denúncia, protocolos)',
+    'Indicação de programas de promoção de saúde mental (apoio psicológico, EAP)',
+    'Recomendação de capacitação de gestores para liderança saudável',
+    'Proposição de melhorias na comunicação organizacional',
   ]},
-  {grupo:'6. Monitoramento e Revisão',itens:[
-    'Definição de indicadores de desempenho',
-    'Cronograma de revisão periódica do PGR',
-    'Registro de acidentes e incidentes',
-    'Programa de treinamento e capacitação',
-    'Comunicação dos riscos aos trabalhadores',
-  ]},
-  {grupo:'7. Documentação',itens:[
-    'PGR elaborado e assinado por profissional habilitado',
-    'Inventário de riscos documentado (incluindo psicossociais)',
-    'Plano de ação com responsáveis e prazos',
-    'Registros de treinamentos realizados',
-    'PCMSO integrado ao GRO',
-    'Documentação acessível aos trabalhadores',
+  {grupo:'6. Documentação e entrega',itens:[
+    'Elaboração do inventário de riscos psicossociais conforme NR01 Anexo I',
+    'Elaboração do plano de ação com responsáveis, prazos e indicadores',
+    'Relatório técnico assinado por profissional habilitado (psicólogo/especialista)',
+    'Integração dos riscos psicossociais ao GRO/PGR da empresa',
+    'Comunicação dos resultados e plano de ação aos trabalhadores',
+    'Prazo legal: MEI/ME/EPP até 26/05/2025 · Demais empresas até 26/05/2026',
   ]},
 ];
 
@@ -2324,7 +2318,7 @@ function abrirFichaNR01(id){
   document.getElementById('nr01-ficha-sub').innerHTML=`<span style="color:${st.cor}">${st.label}</span>${e.setor?' · '+e.setor:''}`;
   // Ativar primeira aba
   document.querySelectorAll('#ov-nr01-ficha .tab').forEach((b,i)=>{b.className='tab'+(i===0?' active':'')});
-  ['geral','checklist','riscos','entrevistas','documentos','plano'].forEach((a,i)=>{
+  ['geral','checklist','riscos','entrevistas','documentos','plano','cronograma'].forEach((a,i)=>{
     document.getElementById('nr01-aba-'+a).style.display=i===0?'block':'none';
   });
   renderNR01AbaGeral();
@@ -2334,7 +2328,7 @@ function abrirFichaNR01(id){
 function abaTabNR01(nome, btn){
   document.querySelectorAll('#ov-nr01-ficha .tab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  ['geral','checklist','riscos','entrevistas','documentos','plano'].forEach(a=>{
+  ['geral','checklist','riscos','entrevistas','documentos','plano','cronograma'].forEach(a=>{
     document.getElementById('nr01-aba-'+a).style.display=a===nome?'block':'none';
   });
   if(nome==='geral') renderNR01AbaGeral();
@@ -2343,6 +2337,7 @@ function abaTabNR01(nome, btn){
   if(nome==='entrevistas') renderNR01AbaEntrevistas();
   if(nome==='documentos') renderNR01AbaDocumentos();
   if(nome==='plano') renderNR01AbaPlano();
+  if(nome==='cronograma') renderNR01AbaCronograma();
 }
 
 function getNR01Dados(empId){
@@ -2799,6 +2794,162 @@ function atualizarStatusAcao(i,val){
 function salvarPlanoObs(){
   const dados=getNR01Dados(nr01AtualId);
   dados.planoObs=document.getElementById('nr01-plano-obs').value;
+  salvarNR01Dados();toast('Salvo!');
+}
+
+// ── Aba Cronograma ──
+const CRON_ETAPAS_PADRAO=[
+  'Contato inicial e proposta',
+  'Assinatura de contrato',
+  'Reunião de abertura com a empresa',
+  'Coleta de documentos',
+  'Aplicação de instrumento de avaliação psicossocial',
+  'Realização de entrevistas',
+  'Análise e tratamento dos dados',
+  'Elaboração do relatório técnico',
+  'Apresentação dos resultados à empresa',
+  'Entrega do relatório final',
+  'Integração ao GRO/PGR',
+];
+
+function renderNR01AbaCronograma(){
+  const dados=getNR01Dados(nr01AtualId);
+  if(!dados.cronograma) dados.cronograma=[];
+  const el=document.getElementById('nr01-aba-cronograma');
+  const etapas=dados.cronograma;
+  el.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div style="font-size:12px;color:var(--text2)">${etapas.length} etapa(s) · ${etapas.filter(e=>e.status==='concluido').length} concluída(s)</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secondary btn-sm" onclick="adicionarEtapasPadrao()">+ Etapas padrão</button>
+        <button class="btn btn-primary btn-sm" onclick="addCronograma()">+ Nova etapa</button>
+      </div>
+    </div>
+    ${etapas.length===0
+      ? `<div class="empty"><p>Nenhuma etapa cadastrada.<br>Use "+ Etapas padrão" para começar rapidamente.</p></div>`
+      : `<div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:520px">
+            <thead><tr style="border-bottom:2px solid var(--border)">
+              <th style="padding:8px 6px;text-align:left;color:var(--text2);font-weight:600;width:36%">Etapa</th>
+              <th style="padding:8px 6px;text-align:left;color:var(--text2);font-weight:600;width:14%">Início prev.</th>
+              <th style="padding:8px 6px;text-align:left;color:var(--text2);font-weight:600;width:14%">Fim prev.</th>
+              <th style="padding:8px 6px;text-align:left;color:var(--text2);font-weight:600;width:22%">Status</th>
+              <th style="width:50px"></th>
+            </tr></thead>
+            <tbody>
+              ${etapas.map((e,i)=>{
+                const cores={pendente:{bg:'var(--surface2)',cor:'var(--text2)',icone:'⏳'},andamento:{bg:'var(--amber-light)',cor:'var(--amber)',icone:'🔄'},concluido:{bg:'var(--teal-light)',cor:'var(--brand-dark)',icone:'✅'},cancelado:{bg:'#fce4ec',cor:'var(--coral)',icone:'❌'}};
+                const c=cores[e.status]||cores.pendente;
+                const atrasado=e.fimPrev&&e.status!=='concluido'&&e.fimPrev<hoje();
+                return`<tr style="border-bottom:1px solid var(--border);${e.status==='concluido'?'opacity:.65':''}">
+                  <td style="padding:8px 6px">
+                    <div style="font-weight:600;${e.status==='concluido'?'text-decoration:line-through;color:var(--text3)':''}">${e.etapa}</div>
+                    ${e.responsavel?`<div style="font-size:11px;color:var(--text3);margin-top:2px">👤 ${e.responsavel}</div>`:''}
+                    ${atrasado?`<div style="font-size:11px;color:var(--coral);margin-top:2px">⚠️ Atrasada</div>`:''}
+                  </td>
+                  <td style="padding:8px 6px;color:var(--text2);font-size:12px">${e.inicioPrev?fmtData(e.inicioPrev):'—'}</td>
+                  <td style="padding:8px 6px;font-size:12px;color:${atrasado?'var(--coral)':'var(--text2)'}">${e.fimPrev?fmtData(e.fimPrev):'—'}</td>
+                  <td style="padding:8px 6px">
+                    <select onchange="atualizarStatusCron(${i},this.value)" style="padding:4px 8px;border:1.5px solid var(--border);border-radius:20px;font-size:11px;font-family:'Nunito',sans-serif;background:${c.bg};color:${c.cor};cursor:pointer;outline:none;width:100%">
+                      <option value="pendente" ${e.status==='pendente'?'selected':''}>⏳ Pendente</option>
+                      <option value="andamento" ${e.status==='andamento'?'selected':''}>🔄 Em andamento</option>
+                      <option value="concluido" ${e.status==='concluido'?'selected':''}>✅ Concluído</option>
+                      <option value="cancelado" ${e.status==='cancelado'?'selected':''}>❌ Cancelado</option>
+                    </select>
+                  </td>
+                  <td style="padding:8px 4px;text-align:right;white-space:nowrap">
+                    <button class="btn btn-ghost btn-xs" onclick="editarCronograma(${i})">✎</button>
+                    <button class="btn btn-danger btn-xs" onclick="excluirCronograma(${i})">✕</button>
+                  </td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>`}
+    <div class="card" style="padding:14px;margin-top:14px">
+      <div style="font-weight:600;font-size:13px;margin-bottom:8px">📝 Observações do cronograma</div>
+      <textarea id="nr01-cron-obs" style="width:100%;min-height:80px;padding:10px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:'Nunito',sans-serif;font-size:13px;resize:vertical;background:var(--surface);outline:none" placeholder="Atrasos, justificativas, ajustes de prazo...">${dados.cronogramaObs||''}</textarea>
+      <button class="btn btn-primary btn-sm" style="margin-top:8px" onclick="salvarCronObs()">Salvar</button>
+    </div>`;
+}
+
+function adicionarEtapasPadrao(){
+  if(!confirm('Adicionar as etapas padrão do projeto? As etapas existentes serão mantidas.')) return;
+  const dados=getNR01Dados(nr01AtualId);
+  if(!dados.cronograma) dados.cronograma=[];
+  const existentes=dados.cronograma.map(e=>e.etapa);
+  CRON_ETAPAS_PADRAO.forEach(nome=>{
+    if(!existentes.includes(nome)){
+      dados.cronograma.push({etapa:nome,inicioPrev:'',fimPrev:'',responsavel:'',status:'pendente'});
+    }
+  });
+  salvarNR01Dados();renderNR01AbaCronograma();toast('Etapas adicionadas!');
+}
+
+function addCronograma(idx){
+  const dados=getNR01Dados(nr01AtualId);
+  const e=idx!==undefined?dados.cronograma[idx]:{};
+  const div=document.createElement('div');
+  div.id='_modal-cron';
+  div.innerHTML=`
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px">
+      <div style="background:var(--surface);border-radius:var(--radius-xl);padding:24px;max-width:460px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.2)">
+        <div style="font-weight:700;font-size:16px;margin-bottom:16px">${idx!==undefined?'Editar':'Nova'} etapa</div>
+        <div class="form-grid">
+          <div class="fg form-full"><label>Nome da etapa *</label>
+            <input id="_c-etapa" value="${e.etapa||''}" placeholder="Ex: Aplicação do instrumento de avaliação" list="_c-etapas-list">
+            <datalist id="_c-etapas-list">${CRON_ETAPAS_PADRAO.map(n=>`<option value="${n}">`).join('')}</datalist>
+          </div>
+          <div class="fg"><label>Início previsto</label><input id="_c-ini" type="date" value="${e.inicioPrev||''}"></div>
+          <div class="fg"><label>Fim previsto</label><input id="_c-fim" type="date" value="${e.fimPrev||''}"></div>
+          <div class="fg form-full"><label>Responsável</label><input id="_c-resp" value="${e.responsavel||''}" placeholder="Ex: Pâmela, empresa, equipe..."></div>
+          <div class="fg form-full"><label>Status</label>
+            <select id="_c-status">
+              <option value="pendente" ${(e.status||'pendente')==='pendente'?'selected':''}>⏳ Pendente</option>
+              <option value="andamento" ${e.status==='andamento'?'selected':''}>🔄 Em andamento</option>
+              <option value="concluido" ${e.status==='concluido'?'selected':''}>✅ Concluído</option>
+              <option value="cancelado" ${e.status==='cancelado'?'selected':''}>❌ Cancelado</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px">
+          <button class="btn btn-secondary" onclick="document.getElementById('_modal-cron').remove()">Cancelar</button>
+          <button class="btn btn-primary" onclick="confirmarCronograma(${idx})">Salvar</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(div);
+}
+
+function editarCronograma(i){addCronograma(i);}
+
+function confirmarCronograma(idx){
+  const etapa=document.getElementById('_c-etapa').value.trim();
+  if(!etapa){alert('Informe o nome da etapa.');return;}
+  const dados=getNR01Dados(nr01AtualId);
+  const obj={etapa,inicioPrev:document.getElementById('_c-ini').value,fimPrev:document.getElementById('_c-fim').value,responsavel:document.getElementById('_c-resp').value,status:document.getElementById('_c-status').value};
+  if(idx!==undefined) dados.cronograma[idx]=obj;
+  else dados.cronograma.push(obj);
+  document.getElementById('_modal-cron').remove();
+  salvarNR01Dados();renderNR01AbaCronograma();toast('Etapa salva!');
+}
+
+function excluirCronograma(i){
+  if(!confirm('Excluir esta etapa?'))return;
+  const dados=getNR01Dados(nr01AtualId);
+  dados.cronograma.splice(i,1);
+  salvarNR01Dados();renderNR01AbaCronograma();
+}
+
+function atualizarStatusCron(i,val){
+  const dados=getNR01Dados(nr01AtualId);
+  dados.cronograma[i].status=val;
+  salvarNR01Dados();renderNR01AbaCronograma();
+}
+
+function salvarCronObs(){
+  const dados=getNR01Dados(nr01AtualId);
+  dados.cronogramaObs=document.getElementById('nr01-cron-obs').value;
   salvarNR01Dados();toast('Salvo!');
 }
 
