@@ -45,10 +45,18 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
 .header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:58px;gap:12px;position:sticky;top:0;z-index:50}
 .logo{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--teal-dark);flex-shrink:0;letter-spacing:-.5px}
 .logo em{color:var(--coral);font-style:italic}
-.nav{display:flex;gap:2px;overflow-x:auto}
-.nav-btn{padding:7px 15px;border:none;background:none;border-radius:var(--radius);cursor:pointer;font-family:'Nunito',sans-serif;font-size:13px;font-weight:500;color:var(--text2);transition:all .18s;white-space:nowrap}
-.nav-btn:hover{background:var(--surface2)}
+.nav{position:relative;flex-shrink:0}
+.nav-toggle{display:flex;align-items:center;gap:8px;padding:7px 14px;border:1.5px solid var(--border);background:var(--surface);border-radius:var(--radius);cursor:pointer;font-family:'Nunito',sans-serif;font-size:13px;font-weight:500;color:var(--text);transition:all .18s;white-space:nowrap;user-select:none}
+.nav-toggle:hover{border-color:var(--brand);color:var(--brand-dark)}
+.nav-toggle .nav-chevron{font-size:10px;transition:transform .2s;color:var(--text3)}
+.nav-toggle.open .nav-chevron{transform:rotate(180deg)}
+.nav-dropdown{display:none;position:absolute;top:calc(100% + 6px);left:0;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-lg);box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:200;min-width:200px;overflow:hidden}
+.nav-dropdown.open{display:block}
+.nav-btn{display:block;width:100%;padding:10px 18px;border:none;background:none;cursor:pointer;font-family:'Nunito',sans-serif;font-size:13px;font-weight:500;color:var(--text2);transition:all .15s;white-space:nowrap;text-align:left}
+.nav-btn:hover{background:var(--surface2);color:var(--text)}
 .nav-btn.active{background:var(--brand-light);color:var(--brand-dark);font-weight:600}
+/* Mobile buttons — hidden on desktop */
+.nav-btn-mobile{display:none}
 .header-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
 .sync-dot{width:8px;height:8px;border-radius:50%;background:var(--brand);flex-shrink:0;transition:background .3s}
 .sync-dot.syncing{background:var(--amber);animation:pulse 1s infinite}
@@ -218,33 +226,41 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
   .header{padding:0 12px;height:52px}
   .logo{font-size:18px}
   .sync-label,.btn-out{display:none}
+  /* Esconde dropdown no mobile */
+  .nav-toggle,.nav-dropdown{display:none !important}
+  /* Nav inferior fixa para mobile */
   .nav{
     position:fixed;bottom:0;left:0;right:0;
     background:var(--surface);
     border-top:1px solid var(--border);
     z-index:100;
+    display:flex;
     justify-content:space-around;
     padding:4px 0 max(4px,env(safe-area-inset-bottom));
     gap:0;
-    overflow-x:visible;
+    overflow-x:auto;
     box-shadow:0 -2px 12px rgba(0,0,0,.08);
   }
-  .nav-btn{
-    flex:1;padding:6px 4px 4px;
-    border-radius:8px;
-    font-size:10px;
-    font-weight:500;
+  .nav-btn-mobile{
     display:flex;flex-direction:column;align-items:center;gap:2px;
-    min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    flex:1;padding:6px 4px 4px;
+    border:none;background:none;
+    border-radius:8px;
+    font-family:'Nunito',sans-serif;
+    font-size:9px;font-weight:500;color:var(--text2);
+    cursor:pointer;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    transition:all .15s;
   }
-  .nav-btn::before{font-size:18px;line-height:1}
-  .nav-btn[onclick*="dashboard"]::before{content:"🏠"}
-  .nav-btn[onclick*="pacientes"]::before{content:"👤"}
-  .nav-btn[onclick*="agenda"]::before{content:"📅"}
-  .nav-btn[onclick*="pagamentos"]::before{content:"💳"}
-  .nav-btn[onclick*="supervisao"]::before{content:"🎓"}
-  .nav-btn[onclick*="perfil"]::before{content:"⚙️"}
-  .nav-btn[onclick*="configuracoes"]::before{content:"🔧"}
+  .nav-btn-mobile.active{color:var(--brand-dark);font-weight:700}
+  .nav-btn-mobile::before{font-size:18px;line-height:1}
+  .nav-btn-mobile[onclick*="dashboard"]::before{content:"🏠"}
+  .nav-btn-mobile[onclick*="pacientes"]::before{content:"👤"}
+  .nav-btn-mobile[onclick*="agenda"]::before{content:"📅"}
+  .nav-btn-mobile[onclick*="pagamentos"]::before{content:"💳"}
+  .nav-btn-mobile[onclick*="supervisao"]::before{content:"🎓"}
+  .nav-btn-mobile[onclick*="nr01"]::before{content:"🏢"}
+  .nav-btn-mobile[onclick*="perfil"]::before{content:"🙍"}
+  .nav-btn-mobile[onclick*="configuracoes"]::before{content:"⚙️"}
 
   /* Empurrar conteúdo acima da nav fixa */
   .main{padding:14px 12px 80px;max-width:100%}
@@ -405,15 +421,32 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
         <div style="font-family:'Nunito',sans-serif;font-size:9px;color:#4a6868;letter-spacing:1.5px;text-transform:uppercase;margin-top:1px">PSICÓLOGA</div>
       </div>
     </div>
-    <nav class="nav">
-      <button class="nav-btn active" onclick="showPage('dashboard')">Início</button>
-      <button class="nav-btn" onclick="showPage('pacientes')">Pacientes</button>
-      <button class="nav-btn" onclick="showPage('agenda')">Agenda</button>
-      <button class="nav-btn" onclick="showPage('pagamentos')">Pagamentos</button>
-      <button class="nav-btn" onclick="showPage('supervisao')">Supervisão</button>
-      <button class="nav-btn" onclick="showPage('nr01')">NR01</button>
-      <button class="nav-btn" onclick="showPage('perfil')">Perfil</button>
-      <button class="nav-btn" onclick="showPage('configuracoes')">Configurações</button>
+    <nav class="nav" id="nav-menu">
+      <!-- Desktop: botão toggle do dropdown -->
+      <button class="nav-toggle" id="nav-toggle-btn" onclick="toggleNavMenu()">
+        <span id="nav-label-atual">🏠 Início</span>
+        <span class="nav-chevron">▼</span>
+      </button>
+      <!-- Desktop: dropdown com itens -->
+      <div class="nav-dropdown" id="nav-dropdown">
+        <button class="nav-btn active" onclick="showPage('dashboard')">🏠 Início</button>
+        <button class="nav-btn" onclick="showPage('pacientes')">👤 Pacientes</button>
+        <button class="nav-btn" onclick="showPage('agenda')">📅 Agenda</button>
+        <button class="nav-btn" onclick="showPage('pagamentos')">💳 Pagamentos</button>
+        <button class="nav-btn" onclick="showPage('supervisao')">🎓 Supervisão</button>
+        <button class="nav-btn" onclick="showPage('nr01')">🏢 NR01</button>
+        <button class="nav-btn" onclick="showPage('perfil')">🙍 Perfil</button>
+        <button class="nav-btn" onclick="showPage('configuracoes')">⚙️ Configurações</button>
+      </div>
+      <!-- Mobile: botões diretos na barra inferior -->
+      <button class="nav-btn-mobile active" onclick="showPage('dashboard')">Início</button>
+      <button class="nav-btn-mobile" onclick="showPage('pacientes')">Pacientes</button>
+      <button class="nav-btn-mobile" onclick="showPage('agenda')">Agenda</button>
+      <button class="nav-btn-mobile" onclick="showPage('pagamentos')">Pagamentos</button>
+      <button class="nav-btn-mobile" onclick="showPage('supervisao')">Supervisão</button>
+      <button class="nav-btn-mobile" onclick="showPage('nr01')">NR01</button>
+      <button class="nav-btn-mobile" onclick="showPage('perfil')">Perfil</button>
+      <button class="nav-btn-mobile" onclick="showPage('configuracoes')">Config.</button>
     </nav>
     <div class="header-right">
       <div class="sync-dot" id="sync-dot"></div>
@@ -1741,11 +1774,36 @@ function signOut(){
 }
 
 // ═══ UI ═══
+// ═══ NAV DROPDOWN ═══
+const NAV_LABELS={'dashboard':'🏠 Início','pacientes':'👤 Pacientes','agenda':'📅 Agenda','pagamentos':'💳 Pagamentos','supervisao':'🎓 Supervisão','nr01':'🏢 NR01','perfil':'🙍 Perfil','configuracoes':'⚙️ Configurações'};
+
+function toggleNavMenu(){
+  const btn=document.getElementById('nav-toggle-btn');
+  const dd=document.getElementById('nav-dropdown');
+  btn.classList.toggle('open');
+  dd.classList.toggle('open');
+}
+
+// Fechar dropdown ao clicar fora
+document.addEventListener('click',e=>{
+  const nav=document.getElementById('nav-menu');
+  if(nav&&!nav.contains(e.target)){
+    document.getElementById('nav-toggle-btn')?.classList.remove('open');
+    document.getElementById('nav-dropdown')?.classList.remove('open');
+  }
+});
+
 function showPage(p){
   document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.nav-btn,.nav-btn-mobile').forEach(x=>x.classList.remove('active'));
   document.getElementById('page-'+p).classList.add('active');
-  document.querySelectorAll('.nav-btn').forEach(b=>{if(b.getAttribute('onclick').includes("'"+p+"'"))b.classList.add('active')});
+  document.querySelectorAll('.nav-btn,.nav-btn-mobile').forEach(b=>{if(b.getAttribute('onclick')?.includes("'"+p+"'"))b.classList.add('active')});
+  // Atualiza label do botão do dropdown
+  const lbl=document.getElementById('nav-label-atual');
+  if(lbl) lbl.textContent=NAV_LABELS[p]||p;
+  // Fecha o dropdown
+  document.getElementById('nav-toggle-btn')?.classList.remove('open');
+  document.getElementById('nav-dropdown')?.classList.remove('open');
   // Scroll ao topo ao trocar de página no mobile
   window.scrollTo({top:0,behavior:'smooth'});
   if(p==='dashboard')renderDashboard();
@@ -3048,8 +3106,14 @@ function exportarPDF(){
   const resp=getNomeResponsavel();
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  doc.setLanguage('pt-BR');
+  // Usar fonte nativa com suporte latin
+  doc.setFont('helvetica');
   const W=210, mg=18, lw=W-mg*2;
   let y=mg;
+
+  // Sanitiza texto para jsPDF (remove emojis, mantém acentos)
+  const s=t=>String(t||'').replace(/[^\x00-\x7FÀ-ÿ]/g,'').trim();
 
   // Helpers
   const corTitulo=[13,90,70], corTexto=[28,22,18], corSub=[107,97,88], corLinha=[221,216,207];
@@ -3090,13 +3154,13 @@ function exportarPDF(){
   // Empresa
   doc.setFontSize(18);doc.setFont('helvetica','bold');
   pdfColor(...corTitulo);
-  doc.text(emp.nome||'',mg,y);y+=8;
-  if(emp.setor){txt(emp.setor,10,false,corSub);}
+  doc.text(s(emp.nome),mg,y);y+=8;
+  if(emp.setor){txt(s(emp.setor),10,false,corSub);}
   pdfLine();
 
   // Dados gerais
   if(sel.geral){
-    secao('📋 DADOS DA EMPRESA');
+    secao('DADOS DA EMPRESA');
     const campos=[
       ['CNPJ',emp.cnpj],['Setor / Ramo',emp.setor],
       ['Nº de funcionários',emp.nfunc?emp.nfunc+' trabalhadores':null],
@@ -3108,23 +3172,23 @@ function exportarPDF(){
     campos.forEach(([k,v])=>{
       checkY(7);
       doc.setFontSize(9);doc.setFont('helvetica','bold');pdfColor(...corSub);
-      doc.text(k+':',mg,y);
+      doc.text(s(k)+':',mg,y);
       doc.setFont('helvetica','normal');pdfColor(...corTexto);
-      doc.text(String(v),mg+45,y);
+      doc.text(s(v),mg+45,y);
       y+=6;
     });
-    if(emp.obs){y+=2;txt('Observações: '+emp.obs,9,false,corSub);}
+    if(emp.obs){y+=2;txt(s('Observações: '+emp.obs),9,false,corSub);}
     y+=4;
   }
 
   // Checklist
   if(sel.checklist){
-    secao('✅ CHECKLIST DE RISCOS PSICOSSOCIAIS');
+    secao('CHECKLIST DE RISCOS PSICOSSOCIAIS');
     const check=dados.checklist||{};
     let totalItens=0,okItens=0;
     NR01_CHECKLIST.forEach((grupo,gi)=>{
       checkY(10);y+=2;
-      txt(grupo.grupo,10,true,corTitulo);
+      txt(s(grupo.grupo),10,true,corTitulo);
       grupo.itens.forEach((item,ii)=>{
         const key=`${gi}_${ii}`;
         const marcado=check[key]||false;
@@ -3133,8 +3197,8 @@ function exportarPDF(){
         checkY(6);
         doc.setFontSize(8.5);doc.setFont('helvetica','normal');
         pdfColor(...(marcado?[150,150,150]:corTexto));
-        const mark=marcado?'☑':'☐';
-        const lines=doc.splitTextToSize(mark+' '+item,lw-6);
+        const mark=marcado?'[X]':'[ ]';
+        const lines=doc.splitTextToSize(mark+' '+s(item),lw-6);
         doc.text(lines,mg+3,y);
         if(marcado){
           doc.setDrawColor(150,150,150);
@@ -3153,7 +3217,7 @@ function exportarPDF(){
 
   // Riscos
   if(sel.riscos&&(dados.riscos||[]).length){
-    secao('⚠️ RISCOS IDENTIFICADOS');
+    secao('RISCOS IDENTIFICADOS');
     const nivelLabel={intoleravel:'Intolerável',moderado:'Moderado',aceitavel:'Aceitável'};
     const tipoLabel={fisico:'Físico',quimico:'Químico',biologico:'Biológico',ergonomico:'Ergonômico',acidente:'Acidente',psicossocial:'Psicossocial'};
     dados.riscos.forEach((r,i)=>{
@@ -3161,9 +3225,9 @@ function exportarPDF(){
       doc.setFillColor(245,242,238);
       const startY=y;
       y+=2;
-      txt(`${i+1}. ${r.descricao||''}`,10,true);
-      txt(`Tipo: ${tipoLabel[r.tipo]||r.tipo}   |   Nível: ${nivelLabel[r.nivel]||r.nivel}   |   Setor: ${r.setor||'—'}`,8.5,false,corSub,2);
-      if(r.controle) txt('Controle: '+r.controle,8.5,false,corSub,2);
+      txt(s(`${i+1}. ${r.descricao||''}`),10,true);
+      txt(s(`Tipo: ${tipoLabel[r.tipo]||r.tipo}   |   Nivel: ${nivelLabel[r.nivel]||r.nivel}   |   Setor: ${r.setor||'-'}`),8.5,false,corSub,2);
+      if(r.controle) txt(s('Controle: '+r.controle),8.5,false,corSub,2);
       doc.setFillColor(245,242,238);
       doc.rect(mg,startY-1,lw,y-startY+2,'F');
       y+=4;
@@ -3174,12 +3238,12 @@ function exportarPDF(){
 
   // Entrevistas
   if(sel.entrevistas&&(dados.entrevistas||[]).length){
-    secao('🗣️ ENTREVISTAS REALIZADAS');
+    secao('ENTREVISTAS REALIZADAS');
     dados.entrevistas.forEach((e,i)=>{
       checkY(14);y+=2;
-      txt(`${i+1}. ${e.nome||'Anônimo'}${e.cargo?' — '+e.cargo:''}${e.setor?' ('+e.setor+')':''}`,10,true);
+      txt(s(`${i+1}. ${e.nome||'Anonimo'}${e.cargo?' - '+e.cargo:''}${e.setor?' ('+e.setor+')':''}`),10,true);
       if(e.data) txt('Data: '+fmtData(e.data),8.5,false,corSub,2);
-      if(e.conteudo) txt(e.conteudo,9,false,corTexto,2);
+      if(e.conteudo) txt(s(e.conteudo),9,false,corTexto,2);
       y+=4;pdfLine();
     });
     y+=2;
@@ -3187,17 +3251,17 @@ function exportarPDF(){
 
   // Plano de ação
   if(sel.plano&&(dados.plano||[]).length){
-    secao('🎯 PLANO DE AÇÃO');
+    secao('PLANO DE AÇÃO');
     const stLabel={pendente:'Pendente',andamento:'Em andamento',concluido:'Concluído'};
     dados.plano.forEach((a,i)=>{
       checkY(14);y+=1;
-      txt(`${i+1}. ${a.acao||''}`,10,true);
+      txt(s(`${i+1}. ${a.acao||''}`),10,true);
       const meta=[];
-      if(a.responsavel) meta.push('Responsável: '+a.responsavel);
+      if(a.responsavel) meta.push('Responsavel: '+a.responsavel);
       if(a.prazo) meta.push('Prazo: '+fmtData(a.prazo));
       meta.push('Status: '+(stLabel[a.status]||a.status||'Pendente'));
-      txt(meta.join('   |   '),8.5,false,corSub,2);
-      if(a.obs) txt('Obs: '+a.obs,8.5,false,corSub,2);
+      txt(s(meta.join('   |   ')),8.5,false,corSub,2);
+      if(a.obs) txt(s('Obs: '+a.obs),8.5,false,corSub,2);
       y+=3;
     });
     if(dados.planoObs){y+=2;txt('Considerações finais: '+dados.planoObs,9,false,corSub);}
@@ -3206,7 +3270,7 @@ function exportarPDF(){
 
   // Cronograma
   if(sel.cronograma&&(dados.cronograma||[]).length){
-    secao('📅 CRONOGRAMA');
+    secao('CRONOGRAMA');
     const stLabel={pendente:'Pendente',andamento:'Em andamento',concluido:'Concluído',cancelado:'Cancelado'};
     dados.cronograma.forEach((c,i)=>{
       checkY(10);y+=1;
