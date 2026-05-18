@@ -538,12 +538,22 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
         <!-- Filtros -->
         <div class="card" style="margin-bottom:12px;padding:14px 16px">
           <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+            <!-- Modo de visão -->
+            <div style="display:flex;align-items:center;gap:6px">
+              <label style="font-size:12px;color:var(--text2);font-weight:600;white-space:nowrap">Visão:</label>
+              <select id="filtroModoPag" onchange="filtroModoPagamentos=this.value;renderPagamentos()" style="padding:7px 11px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:'Nunito',sans-serif;background:var(--surface)">
+                <option value="recebimento">💵 Recebido no mês</option>
+                <option value="competencia">📅 Gerado no mês</option>
+              </select>
+            </div>
+            <!-- Mês -->
             <div style="display:flex;align-items:center;gap:6px">
               <label style="font-size:12px;color:var(--text2);font-weight:600;white-space:nowrap">Mês:</label>
               <select id="filtroMesPag" onchange="filtroMesPagamentos=this.value;renderPagamentos()" style="padding:7px 11px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:'Nunito',sans-serif;background:var(--surface)">
                 <option value="todos">Todos os meses</option>
               </select>
             </div>
+            <!-- Status -->
             <div style="display:flex;align-items:center;gap:6px">
               <label style="font-size:12px;color:var(--text2);font-weight:600;white-space:nowrap">Status:</label>
               <select onchange="filtroStatus=this.value;renderPagamentos()" id="filtroStatusPag" style="padding:7px 11px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:'Nunito',sans-serif;background:var(--surface)">
@@ -551,6 +561,8 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
               </select>
             </div>
           </div>
+          <!-- Legenda do modo selecionado -->
+          <div id="pag-modo-desc" style="margin-top:8px;font-size:11px;color:var(--text2)"></div>
         </div>
         <!-- Cards de resumo do mês selecionado -->
         <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)" id="stats-pag"></div>
@@ -1594,6 +1606,7 @@ let pacAtual=null,sessAtual=null;
 let mesAtual=new Date().getMonth(),anoAtual=new Date().getFullYear();
 let filtroStatus='todos';
 let filtroMesPagamentos='todos';
+let filtroModoPagamentos='recebimento'; // 'recebimento' = por data de pagamento; 'competencia' = por vencimento
 let emailLogado='';
 
 // ═══ UTILS ═══
@@ -1829,6 +1842,8 @@ function showPage(p){
     // default to current month on first open
     const mesHoje=new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0');
     if(filtroMesPagamentos==='todos')filtroMesPagamentos=mesHoje;
+    const modoSelInit=document.getElementById('filtroModoPag');
+    if(modoSelInit)modoSelInit.value=filtroModoPagamentos;
     renderPagamentos();
     // set the selector value after render
     setTimeout(()=>{
@@ -4965,10 +4980,17 @@ function abrirSessaoDetalhe(sessId){
 function popularFiltroMesPag(){
   const sel=document.getElementById('filtroMesPag');
   if(!sel)return;
-  // coletar todos os meses distintos dos pagamentos (por vencimento ou dataPgto)
+  const modoSel=document.getElementById('filtroModoPag');
+  if(modoSel)modoSel.value=filtroModoPagamentos;
+
+  // Popula meses com base no modo:
+  // recebimento → dataPgto (dinheiro que entrou)
+  // competencia → vencimento (serviço prestado)
   const meses=new Set();
   DB.pagamentos.forEach(pg=>{
-    const ref=pg.dataPgto||pg.vencimento;
+    const ref = filtroModoPagamentos==='competencia'
+      ? pg.vencimento
+      : (pg.dataPgto||pg.vencimento);
     if(ref&&ref.length>=7)meses.add(ref.slice(0,7));
   });
   const sorted=[...meses].sort((a,b)=>b>a?1:-1);
@@ -4976,50 +4998,78 @@ function popularFiltroMesPag(){
   sel.innerHTML='<option value="todos">Todos os meses</option>'+sorted.map(m=>{
     const [y,mo]=m.split('-');
     const nomeMes=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][parseInt(mo)-1];
-    return`<option value="${m}" ${m===curVal?'selected':''} >${nomeMes} ${y}</option>`;
+    return`<option value="${m}" ${m===curVal?'selected':''}>${nomeMes} ${y}</option>`;
   }).join('');
-  // manter valor selecionado se ainda existir
   if(sorted.includes(filtroMesPagamentos))sel.value=filtroMesPagamentos;
+
+  // Atualiza legenda do modo
+  const desc=document.getElementById('pag-modo-desc');
+  if(desc){
+    if(filtroModoPagamentos==='recebimento'){
+      desc.innerHTML='<b>💵 Recebido no mês:</b> mostra pagamentos pela <b>data em que foram pagos</b> — quanto dinheiro efetivamente entrou.';
+    } else {
+      desc.innerHTML='<b>📅 Gerado no mês:</b> mostra pagamentos pela <b>data de vencimento</b> — quanto você gerou/trabalhou independente de ter recebido.';
+    }
+  }
 }
+
 function renderPagamentos(){
   const todosOsPags=DB.pagamentos;
   popularFiltroMesPag();
 
-  // filtrar por mês
+  // Função que retorna a data-referência de acordo com o modo
+  function refData(pg){
+    if(filtroModoPagamentos==='competencia') return pg.vencimento;
+    return pg.dataPgto||pg.vencimento; // recebimento: data do pagamento real
+  }
+
+  // Filtrar por mês
   let pagsFiltrados=todosOsPags;
   if(filtroMesPagamentos!=='todos'){
     pagsFiltrados=todosOsPags.filter(pg=>{
-      const ref=pg.dataPgto||pg.vencimento;
+      const ref=refData(pg);
       return ref&&ref.startsWith(filtroMesPagamentos);
     });
   }
-  // filtrar por status
+
+  // No modo recebimento: ao filtrar por mês específico, só inclui os realmente pagos naquele mês
+  // (pagamentos pendentes/atrasados ficam no mês do vencimento, não do recebimento)
+  if(filtroModoPagamentos==='recebimento'&&filtroMesPagamentos!=='todos'){
+    // mantém pendentes/atrasados que vencem nesse mês TAMBÉM, para referência
+    // (já cobertos porque usamos dataPgto||vencimento)
+  }
+
+  // Filtrar por status
   if(filtroStatus!=='todos')pagsFiltrados=pagsFiltrados.filter(p=>p.status===filtroStatus);
 
-  // calcular totais do conjunto filtrado
+  // Calcular totais
   const pago=pagsFiltrados.filter(p=>p.status==='pago').reduce((a,b)=>a+Number(b.valor||0),0);
   const pend=pagsFiltrados.filter(p=>p.status==='pendente').reduce((a,b)=>a+Number(b.valor||0),0);
   const atras=pagsFiltrados.filter(p=>p.status==='atrasado').reduce((a,b)=>a+Number(b.valor||0),0);
+  const total=pago+pend+atras;
 
+  const isModoComp=filtroModoPagamentos==='competencia';
   const labelPeriodo=filtroMesPagamentos==='todos'?'(total geral)':'';
+  const labelRecebido=isModoComp?'Recebido do período':'Recebido no mês';
+  const labelPrevisto=isModoComp?'Total gerado':'Previsto no mês';
+
   document.getElementById('stats-pag').innerHTML=`
-    <div class="stat-card"><div class="stat-label">Recebido ${labelPeriodo}</div><div class="stat-value" style="font-size:20px;color:var(--teal)">${fmtMoeda(pago)}</div></div>
-    <div class="stat-card"><div class="stat-label">Pendente ${labelPeriodo}</div><div class="stat-value" style="font-size:20px;color:var(--amber)">${fmtMoeda(pend)}</div></div>
-    <div class="stat-card"><div class="stat-label">Atrasado ${labelPeriodo}</div><div class="stat-value" style="font-size:20px;color:var(--coral)">${fmtMoeda(atras)}</div></div>`;
+    <div class="stat-card"><div class="stat-label">${labelRecebido} ${labelPeriodo}</div><div class="stat-value" style="font-size:20px;color:var(--teal)">${fmtMoeda(pago)}</div></div>
+    <div class="stat-card"><div class="stat-label">Pendente ${labelPeriodo}</div><div class="stat-value" style="font-size:20px;color:var(--amber)">${fmtMoeda(pend+atras)}</div></div>
+    <div class="stat-card"><div class="stat-label">${labelPrevisto} ${labelPeriodo}</div><div class="stat-value" style="font-size:20px;color:var(--text)">${fmtMoeda(total)}</div></div>`;
 
   const el=document.getElementById('lista-pagamentos');
 
   if(!pagsFiltrados.length){
-    el.innerHTML='<div class="card"><div class="empty"><p>Nenhum pagamento encontrado</p></div></div>';
+    el.innerHTML=`<div class="card"><div class="empty"><p>Nenhum pagamento encontrado${filtroMesPagamentos!=='todos'?' para este mês':''}</p></div></div>`;
     return;
   }
 
-  // agrupar por mês (apenas quando "todos os meses" estiver selecionado)
+  // Agrupar por mês usando refData
   if(filtroMesPagamentos==='todos'){
-    // agrupar
     const grupos={};
     pagsFiltrados.forEach(pg=>{
-      const ref=pg.dataPgto||pg.vencimento||'0000-00';
+      const ref=refData(pg)||'0000-00';
       const chave=ref.slice(0,7);
       if(!grupos[chave])grupos[chave]=[];
       grupos[chave].push(pg);
@@ -5029,24 +5079,25 @@ function renderPagamentos(){
       const lista=grupos[chave];
       const [y,mo]=chave.split('-');
       const nomeMes=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][parseInt(mo)-1]||'-';
-      const totalMes=lista.filter(p=>p.status==='pago').reduce((a,b)=>a+Number(b.valor||0),0);
-      const pendMes=lista.filter(p=>p.status!=='pago').reduce((a,b)=>a+Number(b.valor||0),0);
+      const totalPago=lista.filter(p=>p.status==='pago').reduce((a,b)=>a+Number(b.valor||0),0);
+      const totalPend=lista.filter(p=>p.status!=='pago').reduce((a,b)=>a+Number(b.valor||0),0);
+      const totalMes=totalPago+totalPend;
       return`<div style="margin-bottom:20px">
         <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 4px;border-bottom:2px solid var(--border);margin-bottom:8px">
           <div style="font-weight:700;font-size:14px;color:var(--text)">${nomeMes} ${y}</div>
-          <div style="display:flex;gap:14px;font-size:12px">
-            <span style="color:var(--teal);font-weight:600">✓ ${fmtMoeda(totalMes)}</span>
-            ${pendMes>0?`<span style="color:var(--amber);font-weight:600">⏳ ${fmtMoeda(pendMes)}</span>`:''}
+          <div style="display:flex;gap:14px;font-size:12px;align-items:center">
+            <span style="color:var(--teal);font-weight:600">✓ ${fmtMoeda(totalPago)}</span>
+            ${totalPend>0?`<span style="color:var(--amber);font-weight:600">⏳ ${fmtMoeda(totalPend)}</span>`:''}
+            <span style="color:var(--text2);font-weight:500">= ${fmtMoeda(totalMes)}</span>
           </div>
         </div>
         <div class="card" style="padding:0;overflow:hidden">
-          ${lista.sort((a,b)=>(b.dataPgto||b.vencimento)>(a.dataPgto||a.vencimento)?1:-1).map(pg=>renderPayItem(pg)).join('')}
+          ${lista.sort((a,b)=>(refData(b)||'')>(refData(a)||'')?1:-1).map(pg=>renderPayItem(pg)).join('')}
         </div>
       </div>`;
     }).join('');
   } else {
-    // mês específico: mostrar apenas lista simples dentro de um card
-    el.innerHTML=`<div class="card" style="padding:0;overflow:hidden">${pagsFiltrados.sort((a,b)=>(b.dataPgto||b.vencimento)>(a.dataPgto||a.vencimento)?1:-1).map(pg=>renderPayItem(pg)).join('')}</div>`;
+    el.innerHTML=`<div class="card" style="padding:0;overflow:hidden">${pagsFiltrados.sort((a,b)=>(refData(b)||'')>(refData(a)||'')?1:-1).map(pg=>renderPayItem(pg)).join('')}</div>`;
   }
 }
 function renderPayItem(pg){
