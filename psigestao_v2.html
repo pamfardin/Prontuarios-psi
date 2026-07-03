@@ -1523,18 +1523,18 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
           <option value="4">🩷 Rosa (Flamingo)</option>
           <option value="5">🟡 Amarelo (Banana)</option>
           <option value="6">🟠 Laranja (Tangerine)</option>
-          <option value="7" selected>🩵 Ciano (Peacock)</option>
+          <option value="7">🩵 Ciano (Peacock)</option>
           <option value="8">⚫ Cinza (Graphite)</option>
           <option value="9">🔵 Azul (Blueberry)</option>
-          <option value="10">🟢 Verde (Basil)</option>
+          <option value="10" selected>🟢 Verde (Basil)</option>
           <option value="11">🔴 Vermelho (Tomato)</option>
         </select>
       </div>
       <div class="fg"><label>Lembrete antes do evento</label>
         <select id="cal-lembrete">
-          <option value="0">Sem lembrete</option>
+          <option value="0" selected>Sem lembrete</option>
           <option value="10">10 minutos antes</option>
-          <option value="15" selected>15 minutos antes</option>
+          <option value="15">15 minutos antes</option>
           <option value="30">30 minutos antes</option>
           <option value="60">1 hora antes</option>
           <option value="120">2 horas antes</option>
@@ -5526,8 +5526,8 @@ function abrirModalCalendar(titulo,data,hora,duracao,descricao,onConfirm){
   document.getElementById('cal-titulo').value=titulo;
   document.getElementById('cal-subtitle').textContent=`${fmtData(data)}${hora?' às '+hora:''}`;
   document.getElementById('cal-desc').value=descricao||'';
-  document.getElementById('cal-cor').value='7';
-  document.getElementById('cal-lembrete').value='15';
+  document.getElementById('cal-cor').value='10';
+  document.getElementById('cal-lembrete').value='0';
   openModal('ov-calendar');
 }
 
@@ -5586,7 +5586,7 @@ async function excluirEventoCalendar(calId){
 function ofereceCalendarSessao(sessao){
   if(!calAtivo())return;
   const pac=DB.pacientes.find(p=>p.id==sessao.pacienteId);
-  const titulo=`Sessão — ${pac?pac.nome:'Paciente'}`;
+  const titulo=`[PACIENTE] ${pac?pac.nome:'Paciente'}`;
   const desc=`${sessao.modalidade||''}${sessao.obs?'\n'+sessao.obs:''}`;
   abrirModalCalendar(titulo,sessao.data,sessao.hora,sessao.duracao,desc,async(t,cor,lembrete,d)=>{
     const calId=await criarEventoCalendar({titulo:t,data:sessao.data,hora:sessao.hora,duracao:sessao.duracao,cor,lembrete,desc:d});
