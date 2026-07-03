@@ -1458,7 +1458,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
 <div class="overlay" id="ov-pagamento">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title">Registrar pagamento</div>
+      <div class="modal-title" id="pg-modal-titulo">Registrar pagamento</div>
       <button class="modal-close" onclick="closeModal('ov-pagamento')">✕</button>
     </div>
     <div class="form-grid">
@@ -1472,7 +1472,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('ov-pagamento')">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarPagamento()">Salvar</button>
+      <button class="btn btn-primary" id="pg-modal-btn-salvar" onclick="salvarPagamento()">Salvar</button>
     </div>
   </div>
 </div>
@@ -4593,6 +4593,7 @@ function renderAbaPagPac(){
           <span class="badge ${pg.status==='pago'?'b-paid':pg.status==='atrasado'?'b-late':'b-pending'}">${pg.status}</span>
           <span style="font-weight:700">${fmtMoeda(pg.valor)}</span>
           ${pg.status!=='pago'?`<button class="btn btn-primary btn-sm" onclick="marcarPago(${pg.id},true)">Marcar pago</button>`:''}
+          <button class="btn btn-ghost btn-sm" onclick="editarPagamento(${pg.id},true)">Editar</button>
         </div>
       </div>`).join(''):'<div class="empty"><p>Nenhum pagamento registrado</p></div>'}`;
 }
@@ -4992,6 +4993,7 @@ function renderPagamentos(){
           <span class="pay-value">${fmtMoeda(pg.valor)}</span>
           ${pg.status!=='pago'?`<button class="btn btn-primary btn-sm" onclick="marcarPago(${pg.id},false)">Marcar pago</button>`:''}
           ${pg.status==='pago'?`<button class="btn btn-ghost btn-sm" onclick="abrirReceita(${pg.id})" style="background:var(--brand-dark);color:#fff;border:none">Receita Saúde</button>`:''}
+          <button class="btn btn-ghost btn-sm" onclick="editarPagamento(${pg.id},false)">Editar</button>
           <button class="btn btn-danger btn-sm" onclick="excluirPagamento(${pg.id})">Excluir</button>
         </div>
       </div>`;
@@ -5006,12 +5008,23 @@ function renderPagamentos(){
     </div>`;
   }).join('');
 }
-function openModalPagamento(){
+let _pgEditId=null, _pgEditFromPac=false;
+function openModalPagamento(id,fromPac){
   document.getElementById('pg-pac').innerHTML='<option value="">Selecionar...</option>'+DB.pacientes.map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
-  ['pg-valor','pg-venc','pg-pgto','pg-desc'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('pg-status').value='pendente';
+  const pg=id?DB.pagamentos.find(p=>p.id===id):null;
+  _pgEditId=pg?pg.id:null; _pgEditFromPac=!!fromPac;
+  document.getElementById('pg-modal-titulo').textContent=pg?'Editar pagamento':'Registrar pagamento';
+  document.getElementById('pg-modal-btn-salvar').textContent=pg?'Salvar alterações':'Salvar';
+  document.getElementById('pg-pac').value=pg?pg.pacienteId:(fromPac?pacAtual:'');
+  document.getElementById('pg-valor').value=pg?pg.valor:'';
+  document.getElementById('pg-venc').value=pg?(pg.vencimento||''):'';
+  document.getElementById('pg-pgto').value=pg?(pg.dataPgto||''):'';
+  document.getElementById('pg-status').value=pg?pg.status:'pendente';
+  document.getElementById('pg-forma').value=pg?(pg.forma||'pix'):'pix';
+  document.getElementById('pg-desc').value=pg?(pg.descricao||''):'';
   openModal('ov-pagamento');
 }
+function editarPagamento(id,fromPac){openModalPagamento(id,fromPac)}
 function preencherValorPac(){
   const id=Number(document.getElementById('pg-pac').value);
   const p=DB.pacientes.find(x=>x.id===id);
@@ -5021,8 +5034,18 @@ function salvarPagamento(){
   const pac=document.getElementById('pg-pac').value;
   const valor=document.getElementById('pg-valor').value;
   if(!pac||!valor)return alert('Selecione o paciente e informe o valor.');
-  DB.pagamentos.push({id:nextId(DB.pagamentos),pacienteId:Number(pac),valor:Number(valor),vencimento:document.getElementById('pg-venc').value,dataPgto:document.getElementById('pg-pgto').value,status:document.getElementById('pg-status').value,forma:document.getElementById('pg-forma').value,descricao:document.getElementById('pg-desc').value});
-  closeModal('ov-pagamento');renderPagamentos();scheduleSave();toast('Pagamento registrado!');
+  const dados={pacienteId:Number(pac),valor:Number(valor),vencimento:document.getElementById('pg-venc').value,dataPgto:document.getElementById('pg-pgto').value,status:document.getElementById('pg-status').value,forma:document.getElementById('pg-forma').value,descricao:document.getElementById('pg-desc').value};
+  if(_pgEditId){
+    const i=DB.pagamentos.findIndex(p=>p.id===_pgEditId);
+    if(i>=0)DB.pagamentos[i]={...DB.pagamentos[i],...dados};
+    closeModal('ov-pagamento');
+    if(_pgEditFromPac)renderAbaPagPac();else renderPagamentos();
+    scheduleSave();toast('Pagamento atualizado!');
+  }else{
+    DB.pagamentos.push({id:nextId(DB.pagamentos),...dados});
+    closeModal('ov-pagamento');renderPagamentos();scheduleSave();toast('Pagamento registrado!');
+  }
+  _pgEditId=null;_pgEditFromPac=false;
 }
 let _pagoId=null, _pagoFromPac=false, _pagoIsSup=false;
 
