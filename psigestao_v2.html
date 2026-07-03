@@ -535,39 +535,15 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
 
       <!-- TAB: RECEBIMENTOS (padrão) -->
       <div id="tab-pag-recebimentos">
-        <!-- Filtros -->
-        <div class="card" style="margin-bottom:12px;padding:14px 16px">
-          <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
-            <!-- Modo de visão -->
-            <div style="display:flex;align-items:center;gap:6px">
-              <label style="font-size:12px;color:var(--text2);font-weight:600;white-space:nowrap">Visão:</label>
-              <select id="filtroModoPag" onchange="filtroModoPagamentos=this.value;renderPagamentos()" style="padding:7px 11px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:'Nunito',sans-serif;background:var(--surface)">
-                <option value="recebimento">💵 Recebido no mês</option>
-                <option value="competencia">📅 Gerado no mês</option>
-              </select>
-            </div>
-            <!-- Mês -->
-            <div style="display:flex;align-items:center;gap:6px">
-              <label style="font-size:12px;color:var(--text2);font-weight:600;white-space:nowrap">Mês:</label>
-              <select id="filtroMesPag" onchange="filtroMesPagamentos=this.value;renderPagamentos()" style="padding:7px 11px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:'Nunito',sans-serif;background:var(--surface)">
-                <option value="todos">Todos os meses</option>
-              </select>
-            </div>
-            <!-- Status -->
-            <div style="display:flex;align-items:center;gap:6px">
-              <label style="font-size:12px;color:var(--text2);font-weight:600;white-space:nowrap">Status:</label>
-              <select onchange="filtroStatus=this.value;renderPagamentos()" id="filtroStatusPag" style="padding:7px 11px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:'Nunito',sans-serif;background:var(--surface)">
-                <option value="todos">Todos</option><option value="pendente">Pendentes</option><option value="pago">Pagos</option><option value="atrasado">Atrasados</option>
-              </select>
-            </div>
-          </div>
-          <!-- Legenda do modo selecionado -->
-          <div id="pag-modo-desc" style="margin-top:8px;font-size:11px;color:var(--text2)"></div>
-        </div>
-        <!-- Cards de resumo do mês selecionado -->
         <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)" id="stats-pag"></div>
-        <!-- Lista de pagamentos agrupados por mês -->
-        <div id="lista-pagamentos"></div>
+        <div class="card">
+          <div class="section-header"><h3>Histórico de recebimentos</h3>
+            <select onchange="filtroStatus=this.value;renderPagamentos()" style="padding:7px 11px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:'Nunito',sans-serif;background:var(--surface)">
+              <option value="todos">Todos</option><option value="pendente">Pendentes</option><option value="pago">Pagos</option><option value="atrasado">Atrasados</option>
+            </select>
+          </div>
+          <div id="lista-pagamentos"></div>
+        </div>
       </div>
 
       <!-- TAB: FINANCEIRO -->
@@ -1269,9 +1245,6 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);font
       </div>
       <div class="fg"><label>Horário fixo</label><input id="mp-hora" type="time"></div>
       <div class="fg"><label>Status</label><select id="mp-status"><option value="ativo">Ativo</option><option value="inativo">Inativo</option></select></div>
-      <div class="fg"><label>Tipo de serviço</label>
-        <select id="mp-tipo-servico"><option value="">— Selecionar —</option><option value="psicoterapia">Psicoterapia</option><option value="avaliacao">Avaliação Psicológica</option><option value="orientacao">Orientação Profissional</option></select>
-      </div>
       <div class="fg"><label>Número de sessões realizadas (inicial)</label><input id="mp-nsess" type="number" value="0" min="0"></div>
       <div class="fg form-full"><label>Queixa principal / Histórico inicial</label><textarea id="mp-queixa" placeholder="Motivo da busca por psicoterapia, história relevante..."></textarea></div>
       <div class="fg form-full"><label>Objetivos terapêuticos</label><textarea id="mp-obj" placeholder="O que se pretende alcançar com o processo terapêutico..."></textarea></div>
@@ -1605,8 +1578,6 @@ let DB={pacientes:[],sessoes:[],prontuarios:[],pagamentos:[],configuracoes:{},pe
 let pacAtual=null,sessAtual=null;
 let mesAtual=new Date().getMonth(),anoAtual=new Date().getFullYear();
 let filtroStatus='todos';
-let filtroMesPagamentos='todos';
-let filtroModoPagamentos='recebimento'; // 'recebimento' = por data de pagamento; 'competencia' = por vencimento
 let emailLogado='';
 
 // ═══ UTILS ═══
@@ -1838,25 +1809,14 @@ function showPage(p){
   if(p==='dashboard')renderDashboard();
   if(p==='pacientes'){showTabPacientes('ativos');atualizarBadgeEspera();}
   if(p==='agenda'){renderAgenda();atualizarBotaoSync();}
-  if(p==='pagamentos'){
-    // default to current month on first open
-    const mesHoje=new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0');
-    if(filtroMesPagamentos==='todos')filtroMesPagamentos=mesHoje;
-    const modoSelInit=document.getElementById('filtroModoPag');
-    if(modoSelInit)modoSelInit.value=filtroModoPagamentos;
-    renderPagamentos();
-    // set the selector value after render
-    setTimeout(()=>{
-      const selM=document.getElementById('filtroMesPag');
-      if(selM&&filtroMesPagamentos!=='todos')selM.value=filtroMesPagamentos;
-    },50);
-  }
+  if(p==='pagamentos')renderPagamentos();
   if(p==='configuracoes'){renderConfiguracoes();renderConfiguracaoCalendar();renderPersonalizacao();}
   if(p==='perfil')renderPerfil();
   if(p==='supervisao')renderSupervisao();
   if(p==='nr01')renderNR01();
 }
-function openModal(id){document.getElementById(id).classList.add('open')}
+let _zTopoModal=200;
+function openModal(id){const el=document.getElementById(id);_zTopoModal++;el.style.zIndex=_zTopoModal;el.classList.add('open')}
 function closeModal(id){document.getElementById(id).classList.remove('open')}
 document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open')}));
 
@@ -3959,7 +3919,7 @@ function renderPacientes(tab){
         <div>
           <div class="p-name">${p.nome}</div>
           <div class="p-meta">${p.telefone?`${p.telefone} <a href="https://wa.me/${(p.telefone.replace(/\D/g,'')).startsWith('55')?p.telefone.replace(/\D/g,''):'55'+p.telefone.replace(/\D/g,'')}" target="_blank" onclick="event.stopPropagation()" title="WhatsApp" style="display:inline-flex;align-items:center;background:#25D366;border-radius:5px;padding:1px 4px;margin-left:4px;vertical-align:middle"><svg width="12" height="12" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>`:''}${p.telefone&&p.email?' · ':''}${p.email||''}</div>
-          <div class="p-meta" style="margin-top:3px">${p.tipoServico?`<span class="badge b-scheduled" style="font-size:10px;padding:1px 6px;margin-right:4px">${{psicoterapia:'Psicoterapia',avaliacao:'Avaliação Psicológica',orientacao:'Orientação Profissional'}[p.tipoServico]||p.tipoServico}</span>`:''} ${p.valorSessao?fmtMoeda(p.valorSessao)+'/sessão':''} ${p.horario?'· '+diasAbr[p.diaSemana]+' '+p.horario:''} · ${nSess} sessão(ões)</div>
+          <div class="p-meta" style="margin-top:3px">${p.valorSessao?fmtMoeda(p.valorSessao)+'/sessão':''} ${p.horario?'· '+diasAbr[p.diaSemana]+' '+p.horario:''} · ${nSess} sessão(ões)</div>
         </div>
       </div>
       <div class="p-actions">
@@ -3979,7 +3939,6 @@ function openModalPaciente(){
   document.getElementById('mp-valor').value='';document.getElementById('mp-nsess').value='0';
   document.getElementById('mp-freq').value='semanal';document.getElementById('mp-dia').value='';
   document.getElementById('mp-hora').value='';document.getElementById('mp-status').value='ativo';
-  document.getElementById('mp-tipo-servico').value='';
   openModal('ov-paciente');
 }
 function editarPaciente(id){
@@ -4000,7 +3959,6 @@ function editarPaciente(id){
   document.getElementById('mp-nsess').value=p.nSessoes||0;
   document.getElementById('mp-queixa').value=p.queixa||'';
   document.getElementById('mp-obj').value=p.objetivos||'';
-  document.getElementById('mp-tipo-servico').value=p.tipoServico||'';
   openModal('ov-paciente');
 }
 function abrirWhatsAppCadastro(){
@@ -4012,7 +3970,7 @@ function abrirWhatsAppCadastro(){
 function salvarPaciente(){
   const nome=document.getElementById('mp-nome').value.trim();
   if(!nome)return alert('Informe o nome.');
-  const dados={nome,nascimento:document.getElementById('mp-nasc').value,telefone:document.getElementById('mp-tel').value,email:document.getElementById('mp-email').value,cpf:document.getElementById('mp-cpf').value,rg:document.getElementById('mp-rg').value,valorSessao:document.getElementById('mp-valor').value,frequencia:document.getElementById('mp-freq').value,diaSemana:document.getElementById('mp-dia').value,horario:document.getElementById('mp-hora').value,status:document.getElementById('mp-status').value,nSessoes:Number(document.getElementById('mp-nsess').value)||0,queixa:document.getElementById('mp-queixa').value,objetivos:document.getElementById('mp-obj').value,tipoServico:document.getElementById('mp-tipo-servico').value};
+  const dados={nome,nascimento:document.getElementById('mp-nasc').value,telefone:document.getElementById('mp-tel').value,email:document.getElementById('mp-email').value,cpf:document.getElementById('mp-cpf').value,rg:document.getElementById('mp-rg').value,valorSessao:document.getElementById('mp-valor').value,frequencia:document.getElementById('mp-freq').value,diaSemana:document.getElementById('mp-dia').value,horario:document.getElementById('mp-hora').value,status:document.getElementById('mp-status').value,nSessoes:Number(document.getElementById('mp-nsess').value)||0,queixa:document.getElementById('mp-queixa').value,objetivos:document.getElementById('mp-obj').value};
   if(editandoPacId){const i=DB.pacientes.findIndex(x=>x.id===editandoPacId);if(i>=0)DB.pacientes[i]={...DB.pacientes[i],...dados};}
   else{dados.id=nextId(DB.pacientes);dados.criadoEm=hoje();DB.pacientes.push(dados);}
   closeModal('ov-paciente');renderPacientes();scheduleSave();toast('Paciente salvo!');
@@ -4502,6 +4460,7 @@ function exportarAnamnesePDF(){
   const cfg=DB.configuracoes||{};
   let html=`<div style="font-family:'Nunito',sans-serif;color:#1a2e2e">
     <div style="text-align:center;border-bottom:2px solid #2a6b72;padding-bottom:12px;margin-bottom:20px">
+      <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#2a6b72;font-weight:600">${cfg.nome||''}${cfg.crp?' · CRP '+cfg.crp:''}</div>
       <div style="font-size:10px;color:#888;margin-top:3px">Emitido em ${fmtData(hoje())}</div>
     </div>
     <div style="font-size:16px;font-weight:700;color:#1a4548;margin-bottom:4px">ANAMNESE — ${anam.label.toUpperCase()}</div>
@@ -4977,141 +4936,75 @@ function abrirSessaoDetalhe(sessId){
 }
 
 // ═══ PAGAMENTOS ═══
-function popularFiltroMesPag(){
-  const sel=document.getElementById('filtroMesPag');
-  if(!sel)return;
-  const modoSel=document.getElementById('filtroModoPag');
-  if(modoSel)modoSel.value=filtroModoPagamentos;
-
-  // Popula meses com base no modo:
-  // recebimento → dataPgto (dinheiro que entrou)
-  // competencia → vencimento (serviço prestado)
-  const meses=new Set();
-  DB.pagamentos.forEach(pg=>{
-    const ref = filtroModoPagamentos==='competencia'
-      ? pg.vencimento
-      : (pg.dataPgto||pg.vencimento);
-    if(ref&&ref.length>=7)meses.add(ref.slice(0,7));
-  });
-  const sorted=[...meses].sort((a,b)=>b>a?1:-1);
-  const curVal=sel.value;
-  sel.innerHTML='<option value="todos">Todos os meses</option>'+sorted.map(m=>{
-    const [y,mo]=m.split('-');
-    const nomeMes=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][parseInt(mo)-1];
-    return`<option value="${m}" ${m===curVal?'selected':''}>${nomeMes} ${y}</option>`;
-  }).join('');
-  if(sorted.includes(filtroMesPagamentos))sel.value=filtroMesPagamentos;
-
-  // Atualiza legenda do modo
-  const desc=document.getElementById('pag-modo-desc');
-  if(desc){
-    if(filtroModoPagamentos==='recebimento'){
-      desc.innerHTML='<b>💵 Recebido no mês:</b> mostra pagamentos pela <b>data em que foram pagos</b> — quanto dinheiro efetivamente entrou.';
-    } else {
-      desc.innerHTML='<b>📅 Gerado no mês:</b> mostra pagamentos pela <b>data de vencimento</b> — quanto você gerou/trabalhou independente de ter recebido.';
-    }
-  }
-}
-
 function renderPagamentos(){
-  const todosOsPags=DB.pagamentos;
-  popularFiltroMesPag();
-
-  // Função que retorna a data-referência de acordo com o modo
-  function refData(pg){
-    if(filtroModoPagamentos==='competencia') return pg.vencimento;
-    return pg.dataPgto||pg.vencimento; // recebimento: data do pagamento real
-  }
-
-  // Filtrar por mês
-  let pagsFiltrados=todosOsPags;
-  if(filtroMesPagamentos!=='todos'){
-    pagsFiltrados=todosOsPags.filter(pg=>{
-      const ref=refData(pg);
-      return ref&&ref.startsWith(filtroMesPagamentos);
-    });
-  }
-
-  // No modo recebimento: ao filtrar por mês específico, só inclui os realmente pagos naquele mês
-  // (pagamentos pendentes/atrasados ficam no mês do vencimento, não do recebimento)
-  if(filtroModoPagamentos==='recebimento'&&filtroMesPagamentos!=='todos'){
-    // mantém pendentes/atrasados que vencem nesse mês TAMBÉM, para referência
-    // (já cobertos porque usamos dataPgto||vencimento)
-  }
-
-  // Filtrar por status
-  if(filtroStatus!=='todos')pagsFiltrados=pagsFiltrados.filter(p=>p.status===filtroStatus);
-
-  // Calcular totais
-  const pago=pagsFiltrados.filter(p=>p.status==='pago').reduce((a,b)=>a+Number(b.valor||0),0);
-  const pend=pagsFiltrados.filter(p=>p.status==='pendente').reduce((a,b)=>a+Number(b.valor||0),0);
-  const atras=pagsFiltrados.filter(p=>p.status==='atrasado').reduce((a,b)=>a+Number(b.valor||0),0);
-  const total=pago+pend+atras;
-
-  const isModoComp=filtroModoPagamentos==='competencia';
-  const labelPeriodo=filtroMesPagamentos==='todos'?'(total geral)':'';
-  const labelRecebido=isModoComp?'Recebido do período':'Recebido no mês';
-  const labelPrevisto=isModoComp?'Total gerado':'Previsto no mês';
-
+  const pags=DB.pagamentos;
+  const pago=pags.filter(p=>p.status==='pago').reduce((a,b)=>a+Number(b.valor||0),0);
+  const pend=pags.filter(p=>p.status==='pendente').reduce((a,b)=>a+Number(b.valor||0),0);
+  const atras=pags.filter(p=>p.status==='atrasado').reduce((a,b)=>a+Number(b.valor||0),0);
   document.getElementById('stats-pag').innerHTML=`
-    <div class="stat-card"><div class="stat-label">${labelRecebido} ${labelPeriodo}</div><div class="stat-value" style="font-size:20px;color:var(--teal)">${fmtMoeda(pago)}</div></div>
-    <div class="stat-card"><div class="stat-label">Pendente ${labelPeriodo}</div><div class="stat-value" style="font-size:20px;color:var(--amber)">${fmtMoeda(pend+atras)}</div></div>
-    <div class="stat-card"><div class="stat-label">${labelPrevisto} ${labelPeriodo}</div><div class="stat-value" style="font-size:20px;color:var(--text)">${fmtMoeda(total)}</div></div>`;
+    <div class="stat-card"><div class="stat-label">Total recebido</div><div class="stat-value" style="font-size:20px;color:var(--teal)">${fmtMoeda(pago)}</div></div>
+    <div class="stat-card"><div class="stat-label">Pendente</div><div class="stat-value" style="font-size:20px;color:var(--amber)">${fmtMoeda(pend)}</div></div>
+    <div class="stat-card"><div class="stat-label">Atrasado</div><div class="stat-value" style="font-size:20px;color:var(--coral)">${fmtMoeda(atras)}</div></div>`;
 
+  const filtrados=filtroStatus==='todos'?pags:pags.filter(p=>p.status===filtroStatus);
   const el=document.getElementById('lista-pagamentos');
+  if(!filtrados.length){el.innerHTML='<div class="empty"><p>Nenhum pagamento encontrado</p></div>';return;}
 
-  if(!pagsFiltrados.length){
-    el.innerHTML=`<div class="card"><div class="empty"><p>Nenhum pagamento encontrado${filtroMesPagamentos!=='todos'?' para este mês':''}</p></div></div>`;
-    return;
-  }
+  // Agrupa por mês (usa dataPgto se pago, senão vencimento; se nenhum, "Sem data")
+  const grupos={};
+  filtrados.forEach(pg=>{
+    const refDate=pg.dataPgto||pg.vencimento||'';
+    let chave='9999-99'; // sem data vai pro final
+    let label='Sem data definida';
+    if(refDate){
+      chave=refDate.substring(0,7); // "2025-03"
+      const [ano,mes]=chave.split('-');
+      const nomeMes=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+      label=`${nomeMes[parseInt(mes,10)-1]} ${ano}`;
+    }
+    if(!grupos[chave])grupos[chave]={label,items:[]};
+    grupos[chave].items.push(pg);
+  });
 
-  // Agrupar por mês usando refData
-  if(filtroMesPagamentos==='todos'){
-    const grupos={};
-    pagsFiltrados.forEach(pg=>{
-      const ref=refData(pg)||'0000-00';
-      const chave=ref.slice(0,7);
-      if(!grupos[chave])grupos[chave]=[];
-      grupos[chave].push(pg);
+  // Ordena grupos do mais recente para o mais antigo
+  const chavesOrdenadas=Object.keys(grupos).sort((a,b)=>b>a?1:-1);
+
+  el.innerHTML=chavesOrdenadas.map(chave=>{
+    const grupo=grupos[chave];
+    const itens=grupo.items.sort((a,b)=>{
+      const da=a.dataPgto||a.vencimento||'';
+      const db=b.dataPgto||b.vencimento||'';
+      return db>da?1:-1;
     });
-    const chavesOrdenadas=Object.keys(grupos).sort((a,b)=>b>a?1:-1);
-    el.innerHTML=chavesOrdenadas.map(chave=>{
-      const lista=grupos[chave];
-      const [y,mo]=chave.split('-');
-      const nomeMes=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][parseInt(mo)-1]||'-';
-      const totalPago=lista.filter(p=>p.status==='pago').reduce((a,b)=>a+Number(b.valor||0),0);
-      const totalPend=lista.filter(p=>p.status!=='pago').reduce((a,b)=>a+Number(b.valor||0),0);
-      const totalMes=totalPago+totalPend;
-      return`<div style="margin-bottom:20px">
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 4px;border-bottom:2px solid var(--border);margin-bottom:8px">
-          <div style="font-weight:700;font-size:14px;color:var(--text)">${nomeMes} ${y}</div>
-          <div style="display:flex;gap:14px;font-size:12px;align-items:center">
-            <span style="color:var(--teal);font-weight:600">✓ ${fmtMoeda(totalPago)}</span>
-            ${totalPend>0?`<span style="color:var(--amber);font-weight:600">⏳ ${fmtMoeda(totalPend)}</span>`:''}
-            <span style="color:var(--text2);font-weight:500">= ${fmtMoeda(totalMes)}</span>
-          </div>
-        </div>
-        <div class="card" style="padding:0;overflow:hidden">
-          ${lista.sort((a,b)=>(refData(b)||'')>(refData(a)||'')?1:-1).map(pg=>renderPayItem(pg)).join('')}
+    const totalPago=itens.filter(p=>p.status==='pago').reduce((a,b)=>a+Number(b.valor||0),0);
+    const totalPend=itens.filter(p=>p.status!=='pago').reduce((a,b)=>a+Number(b.valor||0),0);
+
+    const resumoBadges=`
+      ${totalPago>0?`<span style="font-size:12px;font-weight:600;color:var(--teal);background:var(--teal-light);padding:3px 10px;border-radius:20px">Recebido ${fmtMoeda(totalPago)}</span>`:''}
+      ${totalPend>0?`<span style="font-size:12px;font-weight:600;color:var(--amber);background:var(--amber-light);padding:3px 10px;border-radius:20px">A receber ${fmtMoeda(totalPend)}</span>`:''}`;
+
+    const linhas=itens.map(pg=>{
+      const p=DB.pacientes.find(x=>x.id==pg.pacienteId);
+      return`<div class="pay-item">
+        <div><div style="font-weight:600;font-size:13px">${p?p.nome:'Paciente'}</div><div style="font-size:12px;color:var(--text2)">${pg.descricao||''}${pg.vencimento?' · Vence '+fmtData(pg.vencimento):''}${pg.dataPgto?' · Pago '+fmtData(pg.dataPgto):''}${pg.forma?' · '+pg.forma:''}</div></div>
+        <div class="pay-right">
+          <span class="badge ${pg.status==='pago'?'b-paid':pg.status==='atrasado'?'b-late':'b-pending'}">${pg.status}</span>
+          <span class="pay-value">${fmtMoeda(pg.valor)}</span>
+          ${pg.status!=='pago'?`<button class="btn btn-primary btn-sm" onclick="marcarPago(${pg.id},false)">Marcar pago</button>`:''}
+          ${pg.status==='pago'?`<button class="btn btn-ghost btn-sm" onclick="abrirReceita(${pg.id})" style="background:var(--brand-dark);color:#fff;border:none">Receita Saúde</button>`:''}
+          <button class="btn btn-danger btn-sm" onclick="excluirPagamento(${pg.id})">Excluir</button>
         </div>
       </div>`;
     }).join('');
-  } else {
-    el.innerHTML=`<div class="card" style="padding:0;overflow:hidden">${pagsFiltrados.sort((a,b)=>(refData(b)||'')>(refData(a)||'')?1:-1).map(pg=>renderPayItem(pg)).join('')}</div>`;
-  }
-}
-function renderPayItem(pg){
-  const p=DB.pacientes.find(x=>x.id==pg.pacienteId);
-  return`<div class="pay-item">
-    <div><div style="font-weight:600;font-size:13px">${p?p.nome:'Paciente'}</div><div style="font-size:12px;color:var(--text2)">${pg.descricao||''}${pg.vencimento?' · Vence '+fmtData(pg.vencimento):''}${pg.dataPgto?' · Pago '+fmtData(pg.dataPgto):''}${pg.forma?' · '+pg.forma:''}</div></div>
-    <div class="pay-right">
-      <span class="badge ${pg.status==='pago'?'b-paid':pg.status==='atrasado'?'b-late':'b-pending'}">${pg.status}</span>
-      <span class="pay-value">${fmtMoeda(pg.valor)}</span>
-      ${pg.status!=='pago'?`<button class="btn btn-primary btn-sm" onclick="marcarPago(${pg.id},false)">Marcar pago</button>`:''}
-      ${pg.status==='pago'?`<button class="btn btn-ghost btn-sm" onclick="abrirReceita(${pg.id})" style="background:var(--brand-dark);color:#fff;border:none">Receita Saúde</button>`:''}
-      <button class="btn btn-danger btn-sm" onclick="excluirPagamento(${pg.id})">Excluir</button>
-    </div>
-  </div>`;
+
+    return`<div style="margin-bottom:20px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:10px 4px 8px">
+        <span style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:600;color:var(--text)">${grupo.label}</span>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">${resumoBadges}</div>
+      </div>
+      ${linhas}
+    </div>`;
+  }).join('');
 }
 function openModalPagamento(){
   document.getElementById('pg-pac').innerHTML='<option value="">Selecionar...</option>'+DB.pacientes.map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
@@ -5268,6 +5161,7 @@ function exportarPDFFicha(){
   const humorLabel={'muito-negativo':'😞 Muito negativo','negativo':'😕 Negativo','neutro':'😐 Neutro','positivo':'🙂 Positivo','muito-positivo':'😊 Muito positivo'};
   let html=`<div style="font-family:'Nunito',Georgia,sans-serif">
     <div style="text-align:center;border-bottom:2px solid #2a6b72;padding-bottom:16px;margin-bottom:24px">
+      <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#2a6b72;font-weight:600">${cfg.nome||''}${cfg.crp?' · CRP '+cfg.crp:''}</div>
       <div style="font-size:11px;color:#888;margin-top:4px">Emitido em ${fmtData(hoje())}</div>
     </div>`;
   pacs.forEach((p,idx)=>{
@@ -5338,6 +5232,7 @@ function exportarPDFFinanceiro(){
   let html=`<div style="font-family:Georgia,serif">
     <div style="text-align:center;border-bottom:2px solid #1a9070;padding-bottom:16px;margin-bottom:24px">
       <div style="font-size:22px;font-weight:bold;color:#0d5c47">Relatório Financeiro</div>
+      ${cfg.nome?`<div style="font-size:14px;color:#444;margin-top:4px">${cfg.nome}${cfg.crp?' · CRP '+cfg.crp:''}</div>`:''}
       <div style="font-size:11px;color:#888;margin-top:4px">${de||ate?`Período: ${de?fmtData(de):'início'} até ${ate?fmtData(ate):'hoje'}`:'Todos os períodos'} · Emitido em ${fmtData(hoje())}</div>
     </div>
     <div style="display:flex;gap:16px;margin-bottom:24px">
